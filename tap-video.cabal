@@ -36,6 +36,7 @@ executable tap-video-exe
                      , tap-video
                      , text
                      , http-types
+                     , wai-extra
   default-language:    Haskell2010
   extensions:          
                        OverloadedStrings
