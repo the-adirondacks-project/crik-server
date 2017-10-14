@@ -9,7 +9,9 @@ import Text.Read (readMaybe)
 import Web.Scotty (scotty, get, param, status, json, middleware)
 
 import Database.Video (getAllVideos, getVideoById)
+import Database.VideoFile (getVideoFile, getVideoFiles)
 import Types.Video (VideoId(VideoId))
+import Types.VideoFile (VideoFileId(VideoFileId))
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
@@ -38,6 +40,26 @@ main = do
     get "/api/videos/:id" $ do
       id :: Int <- param "id"
       maybeVideo <- liftIO $ getVideoById psqlConnection (VideoId id)
+      case maybeVideo of
+        Nothing -> status status404
+        Just video -> json video
+    get "/api/videos/:id/files" $ do
+      id :: Int <- param "id"
+      videos <- liftIO $ getVideoFiles psqlConnection (Just (VideoId id)) Nothing
+      json videos
+    get "/api/videos/files" $ do
+      videos <- liftIO $ getVideoFiles psqlConnection Nothing Nothing
+      json videos
+    get "/api/videos/files/:id" $ do
+      id :: Int <- param "id"
+      maybeVideo <- liftIO $ getVideoFile psqlConnection Nothing (VideoFileId id)
+      case maybeVideo of
+        Nothing -> status status404
+        Just video -> json video
+    get "/api/videos/:videoId/files/:videoFileId" $ do
+      videoId :: Int <- param "videoId"
+      videoFileId :: Int <- param "videoFileId"
+      maybeVideo <- liftIO $ getVideoFile psqlConnection (Just (VideoId videoId)) (VideoFileId videoFileId)
       case maybeVideo of
         Nothing -> status status404
         Just video -> json video

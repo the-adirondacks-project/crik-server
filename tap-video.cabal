@@ -15,7 +15,9 @@ library
   hs-source-dirs:      src
   exposed-modules:     
                        Database.Video
+                     , Database.VideoFile
                      , Types.Video
+                     , Types.VideoFile
   build-depends:       
                        aeson
                      , base >= 4.7 && < 5
