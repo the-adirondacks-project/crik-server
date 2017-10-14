@@ -32,10 +32,10 @@ main = do
   port <- getPort
   scotty port $ do
     middleware logStdoutDev
-    get "/videos" $ do
+    get "/api/videos" $ do
       videos <- liftIO $ getAllVideos psqlConnection
       json videos
-    get "/videos/:id" $ do
+    get "/api/videos/:id" $ do
       id :: Int <- param "id"
       maybeVideo <- liftIO $ getVideoById psqlConnection (VideoId id)
       case maybeVideo of
