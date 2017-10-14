@@ -7,7 +7,7 @@ import Text.Read (readMaybe)
 import Web.Scotty (scotty, get, param, status, json)
 import Network.HTTP.Types.Status (status404)
 
-import Database.Video (getVideoById)
+import Database.Video (getAllVideos, getVideoById)
 import Types.Video (VideoId(VideoId), Video)
 
 maybeGetPort :: IO (Maybe Int)
@@ -30,6 +30,9 @@ main = do
   psqlConnection <- connectPostgreSQL ""
   port <- getPort
   scotty port $ do
+    get "/videos" $ do
+      videos <- liftIO $ getAllVideos psqlConnection
+      json videos
     get "/videos/:id" $ do
       id :: Int <- param "id"
       maybeVideo <- liftIO $ getVideoById psqlConnection (VideoId id)
