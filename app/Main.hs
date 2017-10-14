@@ -41,5 +41,3 @@ main = do
       case maybeVideo of
         Nothing -> status status404
         Just video -> json video
-
-  print "connected"
