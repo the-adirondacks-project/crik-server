@@ -8,7 +8,7 @@ import Web.Scotty (scotty, get, param, status, json)
 import Network.HTTP.Types.Status (status404)
 
 import Database.Video (getAllVideos, getVideoById)
-import Types.Video (VideoId(VideoId), Video)
+import Types.Video (VideoId(VideoId))
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
