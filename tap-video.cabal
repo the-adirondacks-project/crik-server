@@ -16,26 +16,28 @@ library
   exposed-modules:     
                        Database.Video
                      , Types.Video
-  build-depends:       base >= 4.7 && < 5
-                     , aeson
+  build-depends:       
+                       aeson
+                     , base >= 4.7 && < 5
                      , postgresql-simple
                      , text
   default-language:    Haskell2010
   extensions:          
-                       RecordWildCards
-                     , OverloadedStrings
+                       OverloadedStrings
+                     , RecordWildCards
 
 executable tap-video-exe
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base
-                     , aeson
+  build-depends:      
+                       aeson
+                     , base
+                     , http-types
                      , postgresql-simple
                      , scotty
                      , tap-video
                      , text
-                     , http-types
                      , wai-extra
   default-language:    Haskell2010
   extensions:          
@@ -47,7 +49,8 @@ test-suite tap-video-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  build-depends:       base
+  build-depends:       
+                       base
                      , tap-video
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010

@@ -2,11 +2,11 @@ module Main where
 
 import Control.Monad.IO.Class (liftIO)
 import Database.PostgreSQL.Simple (connectPostgreSQL)
+import Network.HTTP.Types.Status (status404)
+import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 import Web.Scotty (scotty, get, param, status, json, middleware)
-import Network.HTTP.Types.Status (status404)
-import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 
 import Database.Video (getAllVideos, getVideoById)
 import Types.Video (VideoId(VideoId))
