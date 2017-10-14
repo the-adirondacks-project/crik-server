@@ -1,13 +1,13 @@
 module Main where
 
 import Control.Monad.IO.Class (liftIO)
-import Database.PostgreSQL.Simple (connectPostgreSQL, query, Connection, Only(Only))
+import Database.PostgreSQL.Simple (connectPostgreSQL)
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 import Web.Scotty (scotty, get, param, status, json)
-import Data.Maybe (listToMaybe)
 import Network.HTTP.Types.Status (status404)
 
+import Database.Video (getVideoById)
 import Types.Video (VideoId(VideoId), Video)
 
 maybeGetPort :: IO (Maybe Int)
@@ -27,18 +27,14 @@ getPort = do
 main :: IO ()
 main = do
   -- Connection info gets passed via environment variables
-  psql <- connectPostgreSQL ""
+  psqlConnection <- connectPostgreSQL ""
   port <- getPort
   scotty port $ do
     get "/videos/:id" $ do
       id :: Int <- param "id"
-      maybeVideo <- liftIO $ getVideo psql (VideoId id)
+      maybeVideo <- liftIO $ getVideoById psqlConnection (VideoId id)
       case maybeVideo of
         Nothing -> status status404
         Just video -> json video
 
   print "connected"
-getVideo :: Connection -> VideoId -> IO (Maybe Video)
-getVideo connection videoId = do
-  rows <- query connection "select * from videos where id = ?" (Only videoId)
-  return (listToMaybe rows)
