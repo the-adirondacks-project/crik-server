@@ -16,8 +16,10 @@ library
   exposed-modules:     
                        Database.Video
                      , Database.VideoFile
+                     , Database.VideoLibrary
                      , Types.Video
                      , Types.VideoFile
+                     , Types.VideoLibrary
   build-depends:       
                        aeson
                      , base >= 4.7 && < 5
@@ -27,6 +29,7 @@ library
   extensions:          
                        OverloadedStrings
                      , RecordWildCards
+                     , TemplateHaskell
 
 executable tap-video-exe
   hs-source-dirs:      app
