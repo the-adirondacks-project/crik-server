@@ -4,13 +4,17 @@ module Types.Video
 , Video(..)
 ) where
 
-import Data.Aeson (ToJSON(toJSON, toEncoding), FromJSON(parseJSON), (.=), object, pairs)
+
+import Data.Aeson (ToJSON(toJSON, toEncoding), (.=), object, pairs)
+import Data.Aeson.TH (deriveJSON, defaultOptions, unwrapUnaryRecords, fieldLabelModifier)
+import Data.Char (toLower)
 import Data.Semigroup (Semigroup ((<>)))
 import Database.PostgreSQL.Simple.FromField (FromField(fromField))
 import Database.PostgreSQL.Simple.FromRow (field, FromRow(fromRow))
 import Database.PostgreSQL.Simple.ToField (ToField(toField))
 import Database.PostgreSQL.Simple.ToRow (ToRow(toRow))
 import Data.Text (Text)
+
 
 newtype VideoId = VideoId { unVideoId :: Int }
 
@@ -22,14 +26,7 @@ instance FromField VideoId where
 instance ToField VideoId where
   toField VideoId{..} = toField unVideoId
 
-instance ToJSON VideoId where
-  toJSON VideoId{..} = toJSON unVideoId
-  toEncoding VideoId{..} = toEncoding unVideoId
-
-instance FromJSON VideoId where
-  parseJSON value = do
-    videoId <- parseJSON value
-    return (VideoId videoId)
+$(deriveJSON defaultOptions{unwrapUnaryRecords=True} ''VideoId)
 
 data Video = Video { videoId :: VideoId, videoName :: Text }
 
@@ -39,7 +36,4 @@ instance FromRow Video where
 instance ToRow Video where
   toRow Video{..} = [toField videoId, toField videoName]
 
-instance ToJSON Video where
-  toJSON Video{..} = object ["id" .= videoId, "name" .= videoName]
-  toEncoding Video{..} = pairs ("id" .= videoId <> "name" .= videoName)
-
+$(deriveJSON defaultOptions{fieldLabelModifier=(drop 5 . map toLower)} ''Video)
