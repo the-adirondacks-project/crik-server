@@ -66,8 +66,12 @@ main = do
         Nothing -> status status404
         Just video -> json video
     get "/api/video_libraries" $ do
-      videos <- liftIO $ getAllVideoLibraries psqlConnection
-      json videos
+      videoLibraries <- liftIO $ getAllVideoLibraries psqlConnection
+      json videoLibraries
+    get "/api/video_libraries/:videoLibraryId" $ do
+      videoLibraryId :: Int <- param "videoLibraryId"
+      videoLibraries <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId videoLibraryId)
+      json videoLibraries
     get "/api/videos/:id" $ do
       id :: Int <- param "id"
       maybeVideoLibrary <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId id)
