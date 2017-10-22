@@ -1,10 +1,12 @@
 module Types.VideoFile
 (
-  VideoFileId(..)
-, VideoFile(..)
+  VideoFile(..)
+, VideoFileId(..)
+, VideoFileStorageId(..)
 ) where
 
 import Data.Aeson (ToJSON(toJSON, toEncoding), FromJSON(parseJSON), (.=), object, pairs)
+import Data.Aeson.TH (deriveJSON, defaultOptions, unwrapUnaryRecords, fieldLabelModifier)
 import Data.Semigroup (Semigroup ((<>)))
 import Database.PostgreSQL.Simple.FromField (FromField(fromField))
 import Database.PostgreSQL.Simple.FromRow (field, FromRow(fromRow))
@@ -13,8 +15,11 @@ import Database.PostgreSQL.Simple.ToRow (ToRow(toRow))
 import Data.Text (Text)
 
 import Types.Video (VideoId)
+import Types.VideoLibrary (VideoLibraryId)
 
 newtype VideoFileId = VideoFileId { unVideoFileId :: Int }
+
+$(deriveJSON defaultOptions{unwrapUnaryRecords=True} ''VideoFileId)
 
 instance FromField VideoFileId where
   fromField field rawData = do
@@ -24,23 +29,50 @@ instance FromField VideoFileId where
 instance ToField VideoFileId where
   toField VideoFileId{..} = toField unVideoFileId
 
-instance ToJSON VideoFileId where
-  toJSON VideoFileId{..} = toJSON unVideoFileId
-  toEncoding VideoFileId{..} = toEncoding unVideoFileId
+newtype VideoFileStorageId = VideoFileStorageId { unVideoFileStorageId :: Text }
 
-instance FromJSON VideoFileId where
-  parseJSON value = do
-    videoFileId <- parseJSON value
-    return (VideoFileId videoFileId)
+$(deriveJSON defaultOptions{unwrapUnaryRecords=True} ''VideoFileStorageId)
 
-data VideoFile = VideoFile { videoFileId :: VideoFileId, videoId :: VideoId, videoFileUrl :: Text }
+instance FromField VideoFileStorageId where
+  fromField field rawData = do
+    videoFileStorageId <- fromField field rawData
+    return $ VideoFileStorageId videoFileStorageId
+
+instance ToField VideoFileStorageId where
+  toField VideoFileStorageId{..} = toField unVideoFileStorageId
+
+data VideoFile = VideoFile {
+  videoFileId :: VideoFileId,
+  videoId :: VideoId,
+  videoFileUrl :: Text,
+  videoLibraryId :: VideoLibraryId,
+  videoFileStorageId :: VideoFileStorageId
+}
 
 instance FromRow VideoFile where
-  fromRow = VideoFile <$> field <*> field <*> field
+  fromRow = VideoFile <$> field <*> field <*> field <*> field <*> field
 
 instance ToRow VideoFile where
-  toRow VideoFile{..} = [toField videoFileId, toField videoId, toField videoFileUrl]
+  toRow VideoFile{..} = [
+      toField videoFileId,
+      toField videoId,
+      toField videoFileUrl,
+      toField videoLibraryId,
+      toField videoFileStorageId
+    ]
 
 instance ToJSON VideoFile where
-  toJSON VideoFile{..} = object ["id" .= videoFileId, "url" .= videoFileUrl]
-  toEncoding VideoFile{..} = pairs ("id" .= videoFileId <> "url" .= videoFileUrl)
+  toJSON VideoFile{..} = object [
+      "id" .= videoFileId,
+      "videoId" .= videoId,
+      "url" .= videoFileUrl,
+      "libraryId" .= videoLibraryId,
+      "storageId" .= videoFileStorageId
+    ]
+  toEncoding VideoFile{..} = pairs (
+      "id" .= videoFileId <>
+      "videoId" .= videoId <>
+      "url" .= videoFileUrl <>
+      "libraryId" .= videoLibraryId <>
+      "storageId" .= videoFileStorageId
+    )

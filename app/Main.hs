@@ -1,13 +1,13 @@
-module Main where
 
 import Control.Monad.IO.Class (liftIO)
+import Data.List ((\\))
 import Data.Text (Text, isPrefixOf, stripPrefix, pack, unpack)
 import Database.PostgreSQL.Simple (connectPostgreSQL)
-import Network.HTTP.Types.Status (status404, status422)
+import Network.HTTP.Types.Status (status404, status422, status500)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Prelude hiding (FilePath)
-import System.Environment (lookupEnv)
 import System.Directory (listDirectory)
+import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 import Web.Scotty (ActionM, scotty, get, param, status, json, middleware)
 
@@ -15,7 +15,7 @@ import Database.Video (getAllVideos, getVideoById)
 import Database.VideoFile (getVideoFile, getVideoFiles)
 import Database.VideoLibrary (getVideoLibraryById, getAllVideoLibraries)
 import Types.Video (VideoId(VideoId))
-import Types.VideoFile (VideoFileId(VideoFileId))
+import Types.VideoFile (VideoFileId(VideoFileId), videoFileStorageId, unVideoFileStorageId)
 import Types.VideoLibrary (VideoLibraryId(VideoLibraryId), VideoLibrary(videoLibraryUrl))
 
 maybeGetPort :: IO (Maybe Int)
@@ -83,8 +83,22 @@ main = do
           case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
             Just filePath -> do
               files <- liftIO $ findAllFilesInLibrary filePath
-              liftIO $ print files
               json files
+            Nothing -> status status422
+        Nothing -> status status404
+    get "/api/video_libraries/:videoLibraryId/new_files" $ do
+      videoLibraryId :: Int <- param "videoLibraryId"
+      maybeVideoLibrary <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId videoLibraryId)
+      case maybeVideoLibrary of
+        Just videoLibrary -> do
+          case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
+            Just filePath -> do
+              maybeFiles <- liftIO $ findAllFilesInLibrary filePath
+              case maybeFiles of
+                Just files -> do
+                  videoFiles <- liftIO $ getVideoFiles psqlConnection Nothing Nothing
+                  json (files \\ (map (unVideoFileStorageId . videoFileStorageId) videoFiles))
+                Nothing -> status status500
             Nothing -> status status422
         Nothing -> status status404
     get "/api/videos/:id" $ do

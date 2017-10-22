@@ -1,7 +1,9 @@
 CREATE TABLE video_files (
     id integer NOT NULL,
     url text NOT NULL,
-    video_id integer NOT NULL
+    video_id integer NOT NULL,
+    video_lirary_id NOT NULL,
+    storage_id text NOT NULL
 );
 
 CREATE SEQUENCE video_files_id_seq
@@ -58,3 +60,9 @@ ALTER TABLE ONLY videos
 
 ALTER TABLE ONLY video_files
     ADD CONSTRAINT video_files_video_id_fkey FOREIGN KEY (video_id) REFERENCES videos(id);
+
+ALTER TABLE ONLY video_files
+    ADD CONSTRAINT video_files_video_library_id_fkey FOREIGN KEY (video_lirary_id) REFERENCES video_libraries(id);
+
+ALTER TABLE ONLY video_files
+    ADD CONSTRAINT video_files_storage_id_unique UNIQUE (storage_id);
