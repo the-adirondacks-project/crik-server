@@ -38,6 +38,7 @@ executable tap-video-exe
   build-depends:      
                        aeson
                      , base
+                     , directory
                      , http-types
                      , postgresql-simple
                      , scotty

@@ -1,19 +1,22 @@
 module Main where
 
 import Control.Monad.IO.Class (liftIO)
+import Data.Text (Text, isPrefixOf, stripPrefix, pack, unpack)
 import Database.PostgreSQL.Simple (connectPostgreSQL)
-import Network.HTTP.Types.Status (status404)
+import Network.HTTP.Types.Status (status404, status422)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import Prelude hiding (FilePath)
 import System.Environment (lookupEnv)
+import System.Directory (listDirectory)
 import Text.Read (readMaybe)
-import Web.Scotty (scotty, get, param, status, json, middleware)
+import Web.Scotty (ActionM, scotty, get, param, status, json, middleware)
 
 import Database.Video (getAllVideos, getVideoById)
 import Database.VideoFile (getVideoFile, getVideoFiles)
 import Database.VideoLibrary (getVideoLibraryById, getAllVideoLibraries)
 import Types.Video (VideoId(VideoId))
 import Types.VideoFile (VideoFileId(VideoFileId))
-import Types.VideoLibrary (VideoLibraryId(VideoLibraryId))
+import Types.VideoLibrary (VideoLibraryId(VideoLibraryId), VideoLibrary(videoLibraryUrl))
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
@@ -72,9 +75,38 @@ main = do
       videoLibraryId :: Int <- param "videoLibraryId"
       videoLibraries <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId videoLibraryId)
       json videoLibraries
+    get "/api/video_libraries/:videoLibraryId/all_files" $ do
+      videoLibraryId :: Int <- param "videoLibraryId"
+      maybeVideoLibrary <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId videoLibraryId)
+      case maybeVideoLibrary of
+        Just videoLibrary -> do
+          case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
+            Just filePath -> do
+              files <- liftIO $ findAllFilesInLibrary filePath
+              liftIO $ print files
+              json files
+            Nothing -> status status422
+        Nothing -> status status404
     get "/api/videos/:id" $ do
       id :: Int <- param "id"
       maybeVideoLibrary <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId id)
       case maybeVideoLibrary of
         Nothing -> status status404
         Just videoLibrary -> json videoLibrary
+
+newtype FilePath = FilePath { unFilePath :: Text }
+
+findAllFilesInLibrary :: FilePath -> IO (Maybe [Text])
+findAllFilesInLibrary filePath = do
+    files <- listDirectory ((unpack . unFilePath) filePath)
+    return $ Just (map pack files)
+
+getFilePathFromFileURI :: Text -> Maybe (FilePath)
+getFilePathFromFileURI uri =
+  case maybePath of
+    Just path -> Just $ FilePath path
+    Nothing -> Nothing
+  where maybePath = stripPrefix filePathPrefix uri
+
+filePathPrefix :: Text
+filePathPrefix = "file://"
