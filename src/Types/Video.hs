@@ -1,13 +1,14 @@
 module Types.Video
 (
-  VideoId(..)
+  NoId(..)
+, VideoId(..)
 , Video(..)
 ) where
 
 
-import Data.Aeson (ToJSON(toJSON, toEncoding), (.=), object, pairs)
-import Data.Aeson.TH (deriveJSON, defaultOptions, unwrapUnaryRecords, fieldLabelModifier)
-import Data.Char (toLower)
+import Data.Aeson (ToJSON(toJSON, toEncoding), FromJSON(..), (.=), object, pairs)
+import Data.Aeson.Types
+import Data.Aeson.TH (deriveJSON, defaultOptions, unwrapUnaryRecords)
 import Data.Semigroup (Semigroup ((<>)))
 import Database.PostgreSQL.Simple.FromField (FromField(fromField))
 import Database.PostgreSQL.Simple.FromRow (field, FromRow(fromRow))
@@ -15,8 +16,9 @@ import Database.PostgreSQL.Simple.ToField (ToField(toField))
 import Database.PostgreSQL.Simple.ToRow (ToRow(toRow))
 import Data.Text (Text)
 
+data NoId = NoId deriving (Show)
 
-newtype VideoId = VideoId { unVideoId :: Int }
+newtype VideoId = VideoId { unVideoId :: Int } deriving (Show)
 
 instance FromField VideoId where
   fromField field rawData = do
@@ -28,12 +30,36 @@ instance ToField VideoId where
 
 $(deriveJSON defaultOptions{unwrapUnaryRecords=True} ''VideoId)
 
-data Video = Video { videoId :: VideoId, videoName :: Text }
+data Video id = Video { videoId :: id , videoName :: Text } deriving (Show)
 
-instance FromRow Video where
+instance (FromField t) => FromRow (Video t) where
   fromRow = Video <$> field <*> field
 
-instance ToRow Video where
+instance ToRow (Video VideoId) where
   toRow Video{..} = [toField videoId, toField videoName]
 
-$(deriveJSON defaultOptions{fieldLabelModifier=(drop 5 . map toLower)} ''Video)
+instance ToRow (Video NoId) where
+  toRow Video{..} = [toField videoName]
+
+instance ToJSON (Video VideoId) where
+  toJSON Video{..} = object [
+      "id" .= videoId,
+      "name" .= videoName
+    ]
+  toEncoding Video{..} = pairs (
+      "id" .= videoId <>
+      "name" .= videoName
+    )
+
+instance FromJSON (Video VideoId) where
+  parseJSON (Object v) = do
+    id <- v .: "id"
+    name <- v .: "name"
+    return (Video (VideoId id) name)
+  parseJSON invalid = typeMismatch "Video" invalid
+
+instance FromJSON (Video NoId) where
+  parseJSON (Object v) = do
+    name <- v .: "name"
+    return (Video NoId name)
+  parseJSON invalid = typeMismatch "Video" invalid

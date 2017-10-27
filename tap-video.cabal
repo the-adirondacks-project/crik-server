@@ -14,7 +14,8 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     
-                       Database.Video
+                       Database.Error
+                     , Database.Video
                      , Database.VideoFile
                      , Database.VideoLibrary
                      , Types.Video
@@ -28,7 +29,8 @@ library
                      , text
   default-language:    Haskell2010
   extensions:          
-                       OverloadedStrings
+                       FlexibleInstances
+                     , OverloadedStrings
                      , RecordWildCards
                      , TemplateHaskell
 
