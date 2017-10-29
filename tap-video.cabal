@@ -39,13 +39,15 @@ executable tap-video-exe
   hs-source-dirs:      app
   main-is:             Main.hs
   other-modules:
-                       Routes.Video
+                       Config
+                     , Routes.Video
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:
                        aeson
                      , base
                      , directory
                      , http-types
+                     , mtl
                      , postgresql-simple
                      , scotty
                      , tap-video
@@ -53,7 +55,8 @@ executable tap-video-exe
                      , wai-extra
   default-language:    Haskell2010
   extensions:
-                       OverloadedStrings
+                       GeneralizedNewtypeDeriving
+                     , OverloadedStrings
                      , RecordWildCards
                      , ScopedTypeVariables
 

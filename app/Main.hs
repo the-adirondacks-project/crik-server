@@ -1,16 +1,18 @@
 
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.Reader (ReaderT, MonadReader, asks, lift, runReaderT)
 import Data.List ((\\))
 import Data.Text (Text, isPrefixOf, stripPrefix, pack, unpack)
-import Database.PostgreSQL.Simple (connectPostgreSQL)
+import Database.PostgreSQL.Simple (Connection, connectPostgreSQL)
 import Network.HTTP.Types.Status (status404, status422, status500)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Prelude hiding (FilePath)
 import System.Directory (listDirectory)
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
-import Web.Scotty (get, json, jsonData, middleware, param, post, put, scotty, status)
+import Web.Scotty.Trans (get, json, jsonData, middleware, param, post, put, scottyT, status)
 
+import Config (Config(..), ConfigM(..))
 import Routes.Video (setupVideoRoutes)
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 import Database.VideoFile (getVideoFile, getVideoFiles)
@@ -33,24 +35,32 @@ getPort = do
     Nothing -> return 8015
     Just x -> return x
 
+getConfig :: IO (Config)
+getConfig = do
+  psqlConnection <- connectPostgreSQL ""
+  return $ Config psqlConnection
+
 main :: IO ()
 main = do
   -- Connection info gets passed via environment variables
-  psqlConnection <- connectPostgreSQL ""
+  config <- getConfig
   port <- getPort
-  scotty port $ do
+  scottyT port (\m -> runReaderT (runConfigM m) config) $ do
     middleware logStdoutDev
-    setupVideoRoutes psqlConnection
+    setupVideoRoutes
     get "/api/video_libraries" $ do
-      videoLibraries <- liftIO $ getAllVideoLibraries psqlConnection
+      connection <- lift $ asks psqlConnection
+      videoLibraries <- liftIO $ getAllVideoLibraries connection
       json videoLibraries
     get "/api/video_libraries/:videoLibraryId" $ do
       videoLibraryId :: Int <- param "videoLibraryId"
-      videoLibraries <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId videoLibraryId)
+      connection <- lift $ asks psqlConnection
+      videoLibraries <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
       json videoLibraries
     get "/api/video_libraries/:videoLibraryId/all_files" $ do
       videoLibraryId :: Int <- param "videoLibraryId"
-      maybeVideoLibrary <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId videoLibraryId)
+      connection <- lift $ asks psqlConnection
+      maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
       case maybeVideoLibrary of
         Just videoLibrary -> do
           case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
@@ -61,7 +71,8 @@ main = do
         Nothing -> status status404
     get "/api/video_libraries/:videoLibraryId/new_files" $ do
       videoLibraryId :: Int <- param "videoLibraryId"
-      maybeVideoLibrary <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId videoLibraryId)
+      connection <- lift $ asks psqlConnection
+      maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
       case maybeVideoLibrary of
         Just videoLibrary -> do
           case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
@@ -69,14 +80,15 @@ main = do
               maybeFiles <- liftIO $ findAllFilesInLibrary filePath
               case maybeFiles of
                 Just files -> do
-                  videoFiles <- liftIO $ getVideoFiles psqlConnection Nothing Nothing
+                  videoFiles <- liftIO $ getVideoFiles connection Nothing Nothing
                   json (files \\ (map (unVideoFileStorageId . videoFileStorageId) videoFiles))
                 Nothing -> status status500
             Nothing -> status status422
         Nothing -> status status404
     get "/api/videos/:id" $ do
       id :: Int <- param "id"
-      maybeVideoLibrary <- liftIO $ getVideoLibraryById psqlConnection (VideoLibraryId id)
+      connection <- lift $ asks psqlConnection
+      maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId id)
       case maybeVideoLibrary of
         Nothing -> status status404
         Just videoLibrary -> json videoLibrary
