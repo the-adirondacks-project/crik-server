@@ -9,9 +9,9 @@ import Prelude hiding (FilePath)
 import System.Directory (listDirectory)
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
-import Web.Scotty (get, json, jsonData, middleware, param, post, scotty, status)
+import Web.Scotty (get, json, jsonData, middleware, param, post, put, scotty, status)
 
-import Database.Video (getAllVideos, getVideoById, insertVideo)
+import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 import Database.VideoFile (getVideoFile, getVideoFiles)
 import Database.VideoLibrary (getVideoLibraryById, getAllVideoLibraries)
 import Types.Video (VideoId(VideoId))
@@ -50,6 +50,13 @@ main = do
       id :: Int <- param "id"
       maybeVideo <- liftIO $ getVideoById psqlConnection (VideoId id)
       case maybeVideo of
+        Nothing -> status status404
+        Just video -> json video
+    put "/api/videos/:id" $ do
+      id :: Int <- param "id"
+      videoUpdate <- jsonData
+      maybeUpdatedVideo <- liftIO $ updateVideo psqlConnection (VideoId id) videoUpdate
+      case maybeUpdatedVideo of
         Nothing -> status status404
         Just video -> json video
     get "/api/videos/:id/files" $ do

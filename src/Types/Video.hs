@@ -16,7 +16,7 @@ import Database.PostgreSQL.Simple.ToField (ToField(toField))
 import Database.PostgreSQL.Simple.ToRow (ToRow(toRow))
 import Data.Text (Text)
 
-data NoId = NoId deriving (Show)
+import Types (NoId(NoId))
 
 newtype VideoId = VideoId { unVideoId :: Int } deriving (Show)
 

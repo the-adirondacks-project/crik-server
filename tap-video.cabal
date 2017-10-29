@@ -18,6 +18,7 @@ library
                      , Database.Video
                      , Database.VideoFile
                      , Database.VideoLibrary
+                     , Types
                      , Types.Video
                      , Types.VideoFile
                      , Types.VideoLibrary
