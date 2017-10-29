@@ -13,7 +13,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     
+  exposed-modules:
                        Database.Error
                      , Database.Video
                      , Database.VideoFile
@@ -22,14 +22,14 @@ library
                      , Types.Video
                      , Types.VideoFile
                      , Types.VideoLibrary
-  build-depends:       
+  build-depends:
                        aeson
                      , base >= 4.7 && < 5
                      , bytestring
                      , postgresql-simple
                      , text
   default-language:    Haskell2010
-  extensions:          
+  extensions:
                        FlexibleInstances
                      , OverloadedStrings
                      , RecordWildCards
@@ -41,7 +41,7 @@ executable tap-video-exe
   other-modules:
                        Routes.Video
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:      
+  build-depends:
                        aeson
                      , base
                      , directory
@@ -52,7 +52,7 @@ executable tap-video-exe
                      , text
                      , wai-extra
   default-language:    Haskell2010
-  extensions:          
+  extensions:
                        OverloadedStrings
                      , RecordWildCards
                      , ScopedTypeVariables
@@ -61,7 +61,7 @@ test-suite tap-video-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  build-depends:       
+  build-depends:
                        base
                      , tap-video
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
