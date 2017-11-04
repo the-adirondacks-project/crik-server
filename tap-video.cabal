@@ -51,15 +51,21 @@ executable tap-video-exe
                      , mtl
                      , postgresql-simple
                      , scotty
+                     , servant
+                     , servant-server
                      , tap-video
                      , text
+                     , wai
                      , wai-extra
+                     , warp
   default-language:    Haskell2010
   extensions:
-                       GeneralizedNewtypeDeriving
+                       DataKinds
+                     , GeneralizedNewtypeDeriving
                      , OverloadedStrings
                      , RecordWildCards
                      , ScopedTypeVariables
+                     , TypeOperators
 
 test-suite tap-video-test
   type:                exitcode-stdio-1.0

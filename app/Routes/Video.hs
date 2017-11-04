@@ -1,6 +1,8 @@
 module Routes.Video
 (
-  setupVideoRoutes
+  VideoAPI
+, setupVideoRoutes
+, videoAPI
 ) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -10,11 +12,20 @@ import Database.PostgreSQL.Simple (Connection)
 import Network.HTTP.Types.Status (status404)
 import Web.Scotty.Trans (ScottyError, ScottyT, get, json, jsonData, param, post, put, status)
 
+import Data.Proxy (Proxy(Proxy))
+import Servant.API (Capture, Get, JSON, (:>))
+
 import Config (Config(..), ConfigM(..))
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 import Database.VideoFile (getVideoFile, getVideoFiles)
-import Types.Video (VideoId(VideoId))
+import Types.Video (Video, VideoId(VideoId))
 import Types.VideoFile (VideoFileId(VideoFileId))
+
+type API = "api" :> VideoAPI
+type VideoAPI = "videos" :> Capture "videoId" Int :> Get '[JSON] (Video VideoId)
+
+videoAPI :: Proxy API
+videoAPI = Proxy
 
 -- Well for some reason making this ScottyT Text ConfigM () works but (ScottyError e) => ScottyT e ConfigM () does not.
 -- I think because I am not giving it an error type when I use it so I'm just doing this for now until I figure out what

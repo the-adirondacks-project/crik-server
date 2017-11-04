@@ -6,9 +6,15 @@ import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 import Web.Scotty.Trans (get, json, jsonData, middleware, param, post, put, scottyT, status)
 
+import Servant (Handler, Server, serve)
+import Network.Wai (Application)
+import Network.Wai.Handler.Warp (run)
+
 import Config (Config(..), ConfigM(..))
-import Routes.Video (setupVideoRoutes)
+import Routes.Video (VideoAPI, setupVideoRoutes, videoAPI)
 import Routes.VideoLibrary (setupVideoLibrariesRoutes)
+
+import Types.Video (Video(Video), VideoId(VideoId))
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
@@ -29,12 +35,25 @@ getConfig = do
   psqlConnection <- connectPostgreSQL ""
   return $ Config psqlConnection
 
+handleVideo :: Int -> Handler (Video VideoId)
+handleVideo videoId = return (Video (VideoId videoId) "foo")
+
+server :: Server VideoAPI
+server = handleVideo
+
+application :: Application
+application = serve videoAPI server
+
 main :: IO ()
 main = do
   -- Connection info gets passed via environment variables
   config <- getConfig
   port <- getPort
+  run port (logStdoutDev application)
+  {--
   scottyT port (\m -> runReaderT (runConfigM m) config) $ do
     middleware logStdoutDev
     setupVideoRoutes
     setupVideoLibrariesRoutes
+  --}
+  return ()
