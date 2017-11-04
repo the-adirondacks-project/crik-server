@@ -41,6 +41,7 @@ executable tap-video-exe
   other-modules:
                        Config
                      , Routes.Video
+                     , Routes.VideoLibrary
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:
                        aeson
