@@ -40,6 +40,7 @@ executable tap-video-exe
   main-is:             Main.hs
   other-modules:
                        Config
+                     , Routes
                      , Routes.Video
                      , Routes.VideoLibrary
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N

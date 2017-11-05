@@ -6,12 +6,14 @@ import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 import Web.Scotty.Trans (get, json, jsonData, middleware, param, post, put, scottyT, status)
 
+import Data.Proxy (Proxy(..))
 import Servant (Handler, Server, serve)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 
 import Config (Config(..), ConfigM(..))
-import Routes.Video (VideoAPI, setupVideoRoutes, videoAPI)
+import Routes (API)
+import Routes.Video (VideoAPI, setupVideoRoutes)
 import Routes.VideoLibrary (setupVideoLibrariesRoutes)
 
 import Types.Video (Video(Video), VideoId(VideoId))
@@ -38,11 +40,14 @@ getConfig = do
 handleVideo :: Int -> Handler (Video VideoId)
 handleVideo videoId = return (Video (VideoId videoId) "foo")
 
+api :: Proxy API
+api = Proxy
+
 server :: Server VideoAPI
 server = handleVideo
 
 application :: Application
-application = serve videoAPI server
+application = serve api server
 
 main :: IO ()
 main = do

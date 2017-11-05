@@ -2,7 +2,6 @@ module Routes.Video
 (
   VideoAPI
 , setupVideoRoutes
-, videoAPI
 ) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -21,11 +20,7 @@ import Database.VideoFile (getVideoFile, getVideoFiles)
 import Types.Video (Video, VideoId(VideoId))
 import Types.VideoFile (VideoFileId(VideoFileId))
 
-type API = "api" :> VideoAPI
 type VideoAPI = "videos" :> Capture "videoId" Int :> Get '[JSON] (Video VideoId)
-
-videoAPI :: Proxy API
-videoAPI = Proxy
 
 -- Well for some reason making this ScottyT Text ConfigM () works but (ScottyError e) => ScottyT e ConfigM () does not.
 -- I think because I am not giving it an error type when I use it so I'm just doing this for now until I figure out what
