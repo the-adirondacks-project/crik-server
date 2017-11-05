@@ -66,11 +66,7 @@ handleVideo1 videoId = do
 
 app :: Config -> Application
 app config = serve api $ enter nt $ handleVideo1
-  where nt = NT $ (\m -> do
-                          either <- liftIO $ runExceptT (runReaderT (runConfigM m) config)
-                          case either of
-                            Left x -> throwError x
-                            Right x -> return x)
+  where nt = NT $ (\m -> runReaderT (runConfigM m) config)
 
 main :: IO ()
 main = do
