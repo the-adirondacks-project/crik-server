@@ -3,6 +3,7 @@ module Routes.Video
   VideoAPI
 , getVideo
 , getVideoFilesHandler
+, getVideoFilesForVideoHandler
 , getVideos
 , setupVideoRoutes
 ) where
@@ -26,9 +27,8 @@ import Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
 
 type VideoAPI = "videos" :> (
     Get '[JSON] [Video VideoId] :<|>
-    Capture "videoId" Int :> (
-      Get '[JSON] (Video VideoId)
-    ) :<|>
+    Capture "videoId" Int :> Get '[JSON] (Video VideoId) :<|>
+    Capture "videoId" Int :> "files" :> Get '[JSON] [VideoFile] :<|>
     "files" :> Get '[JSON] [VideoFile]
   )
 
@@ -49,6 +49,11 @@ getVideoFilesHandler :: ConfigM ([VideoFile])
 getVideoFilesHandler = do
   connection <- asks psqlConnection
   liftIO $ getVideoFiles connection Nothing Nothing
+
+getVideoFilesForVideoHandler :: Int -> ConfigM ([VideoFile])
+getVideoFilesForVideoHandler videoId = do
+  connection <- asks psqlConnection
+  liftIO $ getVideoFiles connection (Just (VideoId videoId)) Nothing
 
 -- Well for some reason making this ScottyT Text ConfigM () works but (ScottyError e) => ScottyT e ConfigM () does not.
 -- I think because I am not giving it an error type when I use it so I'm just doing this for now until I figure out what

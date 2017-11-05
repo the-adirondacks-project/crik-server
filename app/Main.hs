@@ -20,7 +20,7 @@ import Control.Monad.Reader (ReaderT, MonadReader)
 
 import Config (Config(..), ConfigM(..))
 import Routes (API)
-import Routes.Video (VideoAPI, getVideo, getVideoFilesHandler, getVideos, setupVideoRoutes)
+import Routes.Video (VideoAPI, getVideo, getVideoFilesHandler, getVideoFilesForVideoHandler, getVideos, setupVideoRoutes)
 import Routes.VideoLibrary (setupVideoLibrariesRoutes)
 
 import Types.Video (Video(Video), VideoId(VideoId))
@@ -48,7 +48,11 @@ api :: Proxy API
 api = Proxy
 
 server :: Config -> Server API
-server config = enter nt $ getVideos :<|> getVideo :<|> getVideoFilesHandler
+server config = enter nt $
+  getVideos :<|>
+  getVideo :<|>
+  getVideoFilesForVideoHandler :<|>
+  getVideoFilesHandler
   where nt = NT $ (\m -> runReaderT (runConfigM m) config)
 
 app :: Config -> Application
