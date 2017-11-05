@@ -2,11 +2,12 @@ module Routes.Video
 (
   VideoAPI
 , getVideo
-, getVideoFilesHandler
+, getVideoFileHandler
 , getVideoFilesForVideoHandler
+, getVideoFilesHandler
 , getVideos
-, setupVideoRoutes
 , newVideoHandler
+, setupVideoRoutes
 ) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -31,7 +32,10 @@ type VideoAPI = "videos" :> (
     ReqBody '[JSON] (Video NoId) :> Post '[JSON] (Video VideoId) :<|>
     Capture "videoId" Int :> Get '[JSON] (Video VideoId) :<|>
     Capture "videoId" Int :> "files" :> Get '[JSON] [VideoFile] :<|>
-    "files" :> Get '[JSON] [VideoFile]
+    "files" :> (
+      Get '[JSON] [VideoFile] :<|>
+      Capture "videoFileId" Int :> Get '[JSON] VideoFile
+    )
   )
 
 getVideo :: Int -> ConfigM (Video VideoId)
@@ -56,6 +60,14 @@ getVideoFilesHandler :: ConfigM ([VideoFile])
 getVideoFilesHandler = do
   connection <- asks psqlConnection
   liftIO $ getVideoFiles connection Nothing Nothing
+
+getVideoFileHandler :: Int -> ConfigM (VideoFile)
+getVideoFileHandler videoFileId = do
+  connection <- asks psqlConnection
+  maybeVideoFile <- liftIO $ getVideoFile connection Nothing (VideoFileId videoFileId)
+  case maybeVideoFile of
+    Nothing -> throwError err404
+    Just x -> return x
 
 getVideoFilesForVideoHandler :: Int -> ConfigM ([VideoFile])
 getVideoFilesForVideoHandler videoId = do

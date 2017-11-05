@@ -20,7 +20,17 @@ import Control.Monad.Reader (ReaderT, MonadReader)
 
 import Config (Config(..), ConfigM(..))
 import Routes (API)
-import Routes.Video (VideoAPI, getVideo, getVideoFilesHandler, getVideoFilesForVideoHandler, getVideos, setupVideoRoutes, newVideoHandler)
+import Routes.Video
+  (
+    VideoAPI
+  , getVideo
+  , getVideoFileHandler
+  , getVideoFilesForVideoHandler
+  , getVideoFilesHandler
+  , getVideos
+  , newVideoHandler
+  , setupVideoRoutes
+  )
 import Routes.VideoLibrary (setupVideoLibrariesRoutes)
 
 import Types.Video (Video(Video), VideoId(VideoId))
@@ -53,7 +63,8 @@ server config = enter nt $
   newVideoHandler :<|>
   getVideo :<|>
   getVideoFilesForVideoHandler :<|>
-  getVideoFilesHandler
+  getVideoFilesHandler :<|>
+  getVideoFileHandler
   where nt = NT $ (\m -> runReaderT (runConfigM m) config)
 
 app :: Config -> Application
