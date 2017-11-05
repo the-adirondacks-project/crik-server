@@ -56,12 +56,14 @@ executable tap-video-exe
                      , servant-server
                      , tap-video
                      , text
+                     , transformers
                      , wai
                      , wai-extra
                      , warp
   default-language:    Haskell2010
   extensions:
                        DataKinds
+                     , FlexibleContexts
                      , GeneralizedNewtypeDeriving
                      , OverloadedStrings
                      , RecordWildCards

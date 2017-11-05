@@ -7,12 +7,16 @@ import Text.Read (readMaybe)
 import Web.Scotty.Trans (get, json, jsonData, middleware, param, post, put, scottyT, status)
 
 import Data.Proxy (Proxy(..))
-import Servant (Handler, Server, (:~>)(..), enter, serve)
+import Servant (Handler, Server, (:~>)(..), enter, serve, throwError, err404)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Control.Monad.Reader (asks, lift)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
+import Control.Monad.Trans.Except (runExceptT)
+import Control.Monad.Error.Class (MonadError)
+import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Reader (ReaderT, MonadReader)
 
 import Config (Config(..), ConfigM(..))
 import Routes (API)
@@ -40,8 +44,8 @@ getConfig = do
   psqlConnection <- connectPostgreSQL ""
   return $ Config psqlConnection
 
-handleVideo :: Int -> Handler (Maybe (Video VideoId))
-handleVideo videoId = return $ Just (Video (VideoId videoId) "foo")
+handleVideo :: Int -> Handler (Video VideoId)
+handleVideo videoId = return (Video (VideoId videoId) "foo")
 
 api :: Proxy API
 api = Proxy
@@ -52,15 +56,21 @@ server = handleVideo
 application :: Application
 application = serve api server
 
-handleVideo1 :: Int -> ConfigM (Maybe (Video VideoId))
+handleVideo1 :: Int -> ConfigM (Video VideoId)
 handleVideo1 videoId = do
   connection <- asks psqlConnection
   maybeVideo <- liftIO $ getVideoById connection (VideoId videoId)
-  return maybeVideo
+  case maybeVideo of
+    Nothing -> throwError err404
+    Just x -> return x
 
 app :: Config -> Application
 app config = serve api $ enter nt $ handleVideo1
-  where nt = NT $ (\m -> runReaderT (runConfigM m) config)
+  where nt = NT $ (\m -> do
+                          either <- liftIO $ runExceptT (runReaderT (runConfigM m) config)
+                          case either of
+                            Left x -> throwError x
+                            Right x -> return x)
 
 main :: IO ()
 main = do
