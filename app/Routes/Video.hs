@@ -1,6 +1,9 @@
 module Routes.Video
 (
   VideoAPI
+, getVideo
+, getVideoFilesHandler
+, getVideos
 , setupVideoRoutes
 ) where
 
@@ -12,15 +15,40 @@ import Network.HTTP.Types.Status (status404)
 import Web.Scotty.Trans (ScottyError, ScottyT, get, json, jsonData, param, post, put, status)
 
 import Data.Proxy (Proxy(Proxy))
-import Servant.API (Capture, Get, JSON, (:>))
+import Servant.API (Capture, Get, JSON, (:>), (:<|>))
+import Servant (err404, throwError)
 
 import Config (Config(..), ConfigM(..))
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 import Database.VideoFile (getVideoFile, getVideoFiles)
 import Types.Video (Video, VideoId(VideoId))
-import Types.VideoFile (VideoFileId(VideoFileId))
+import Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
 
-type VideoAPI = "videos" :> Capture "videoId" Int :> Get '[JSON] (Video VideoId)
+type VideoAPI = "videos" :> (
+    Get '[JSON] [Video VideoId] :<|>
+    Capture "videoId" Int :> (
+      Get '[JSON] (Video VideoId)
+    ) :<|>
+    "files" :> Get '[JSON] [VideoFile]
+  )
+
+getVideo :: Int -> ConfigM (Video VideoId)
+getVideo videoId = do
+  connection <- asks psqlConnection
+  maybeVideo <- liftIO $ getVideoById connection (VideoId videoId)
+  case maybeVideo of
+    Nothing -> throwError err404
+    Just x -> return x
+
+getVideos :: ConfigM ([Video VideoId])
+getVideos = do
+  connection <- asks psqlConnection
+  liftIO $ getAllVideos connection
+
+getVideoFilesHandler :: ConfigM ([VideoFile])
+getVideoFilesHandler = do
+  connection <- asks psqlConnection
+  liftIO $ getVideoFiles connection Nothing Nothing
 
 -- Well for some reason making this ScottyT Text ConfigM () works but (ScottyError e) => ScottyT e ConfigM () does not.
 -- I think because I am not giving it an error type when I use it so I'm just doing this for now until I figure out what

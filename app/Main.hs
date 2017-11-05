@@ -7,7 +7,7 @@ import Text.Read (readMaybe)
 import Web.Scotty.Trans (get, json, jsonData, middleware, param, post, put, scottyT, status)
 
 import Data.Proxy (Proxy(..))
-import Servant (Handler, Server, (:~>)(..), enter, serve, throwError, err404)
+import Servant (Handler, Server, (:~>)(..), (:<|>)(..), enter, serve, throwError, err404)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Control.Monad.Reader (asks, lift)
@@ -20,7 +20,7 @@ import Control.Monad.Reader (ReaderT, MonadReader)
 
 import Config (Config(..), ConfigM(..))
 import Routes (API)
-import Routes.Video (VideoAPI, setupVideoRoutes)
+import Routes.Video (VideoAPI, getVideo, getVideoFilesHandler, getVideos, setupVideoRoutes)
 import Routes.VideoLibrary (setupVideoLibrariesRoutes)
 
 import Types.Video (Video(Video), VideoId(VideoId))
@@ -44,29 +44,15 @@ getConfig = do
   psqlConnection <- connectPostgreSQL ""
   return $ Config psqlConnection
 
-handleVideo :: Int -> Handler (Video VideoId)
-handleVideo videoId = return (Video (VideoId videoId) "foo")
-
 api :: Proxy API
 api = Proxy
 
-server :: Server VideoAPI
-server = handleVideo
-
-application :: Application
-application = serve api server
-
-handleVideo1 :: Int -> ConfigM (Video VideoId)
-handleVideo1 videoId = do
-  connection <- asks psqlConnection
-  maybeVideo <- liftIO $ getVideoById connection (VideoId videoId)
-  case maybeVideo of
-    Nothing -> throwError err404
-    Just x -> return x
+server :: Config -> Server API
+server config = enter nt $ getVideos :<|> getVideo :<|> getVideoFilesHandler
+  where nt = NT $ (\m -> runReaderT (runConfigM m) config)
 
 app :: Config -> Application
-app config = serve api $ enter nt $ handleVideo1
-  where nt = NT $ (\m -> runReaderT (runConfigM m) config)
+app config = serve api (server config)
 
 main :: IO ()
 main = do
