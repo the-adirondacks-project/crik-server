@@ -79,44 +79,12 @@ getVideoFilesForVideoHandler videoId = do
 -- I want to do for errors.
 setupVideoRoutes :: ScottyT Text ConfigM ()
 setupVideoRoutes = do
-  get "/api/videos" $ do
-    connection <- lift $ asks psqlConnection
-    videos <- liftIO $ getAllVideos connection
-    json videos
-  post "/api/videos" $ do
-    newVideo <- jsonData
-    connection <- lift $ asks psqlConnection
-    insertedVideo <- liftIO $ insertVideo connection newVideo
-    json insertedVideo
-  get "/api/videos/:id" $ do
-    id :: Int <- param "id"
-    connection <- lift $ asks psqlConnection
-    maybeVideo <- liftIO $ getVideoById connection (VideoId id)
-    case maybeVideo of
-      Nothing -> status status404
-      Just video -> json video
   put "/api/videos/:id" $ do
     id :: Int <- param "id"
     videoUpdate <- jsonData
     connection <- lift $ asks psqlConnection
     maybeUpdatedVideo <- liftIO $ updateVideo connection (VideoId id) videoUpdate
     case maybeUpdatedVideo of
-      Nothing -> status status404
-      Just video -> json video
-  get "/api/videos/:id/files" $ do
-    id :: Int <- param "id"
-    connection <- lift $ asks psqlConnection
-    videos <- liftIO $ getVideoFiles connection (Just (VideoId id)) Nothing
-    json videos
-  get "/api/videos/files" $ do
-    connection <- lift $ asks psqlConnection
-    videos <- liftIO $ getVideoFiles connection Nothing Nothing
-    json videos
-  get "/api/videos/files/:id" $ do
-    id :: Int <- param "id"
-    connection <- lift $ asks psqlConnection
-    maybeVideo <- liftIO $ getVideoFile connection Nothing (VideoFileId id)
-    case maybeVideo of
       Nothing -> status status404
       Just video -> json video
   get "/api/videos/:videoId/files/:videoFileId" $ do
