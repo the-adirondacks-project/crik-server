@@ -6,6 +6,7 @@ module Routes.Video
 , getVideoFilesForVideoHandler
 , getVideos
 , setupVideoRoutes
+, newVideoHandler
 ) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -16,17 +17,18 @@ import Network.HTTP.Types.Status (status404)
 import Web.Scotty.Trans (ScottyError, ScottyT, get, json, jsonData, param, post, put, status)
 
 import Data.Proxy (Proxy(Proxy))
-import Servant.API (Capture, Get, JSON, (:>), (:<|>))
+import Servant.API (Capture, Get, JSON, Post, ReqBody, (:>), (:<|>))
 import Servant (err404, throwError)
 
 import Config (Config(..), ConfigM(..))
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 import Database.VideoFile (getVideoFile, getVideoFiles)
-import Types.Video (Video, VideoId(VideoId))
+import Types.Video (NoId(NoId), Video, VideoId(VideoId))
 import Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
 
 type VideoAPI = "videos" :> (
     Get '[JSON] [Video VideoId] :<|>
+    ReqBody '[JSON] (Video NoId) :> Post '[JSON] (Video VideoId) :<|>
     Capture "videoId" Int :> Get '[JSON] (Video VideoId) :<|>
     Capture "videoId" Int :> "files" :> Get '[JSON] [VideoFile] :<|>
     "files" :> Get '[JSON] [VideoFile]
@@ -39,6 +41,11 @@ getVideo videoId = do
   case maybeVideo of
     Nothing -> throwError err404
     Just x -> return x
+
+newVideoHandler :: (Video NoId) -> ConfigM (Video VideoId)
+newVideoHandler newVideo = do
+  connection <- asks psqlConnection
+  liftIO $ insertVideo connection newVideo
 
 getVideos :: ConfigM ([Video VideoId])
 getVideos = do
