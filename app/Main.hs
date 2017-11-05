@@ -7,9 +7,12 @@ import Text.Read (readMaybe)
 import Web.Scotty.Trans (get, json, jsonData, middleware, param, post, put, scottyT, status)
 
 import Data.Proxy (Proxy(..))
-import Servant (Handler, Server, serve)
+import Servant (Handler, Server, (:~>)(..), enter, serve)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
+import Control.Monad.Reader (asks, lift)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 
 import Config (Config(..), ConfigM(..))
 import Routes (API)
@@ -37,8 +40,8 @@ getConfig = do
   psqlConnection <- connectPostgreSQL ""
   return $ Config psqlConnection
 
-handleVideo :: Int -> Handler (Video VideoId)
-handleVideo videoId = return (Video (VideoId videoId) "foo")
+handleVideo :: Int -> Handler (Maybe (Video VideoId))
+handleVideo videoId = return $ Just (Video (VideoId videoId) "foo")
 
 api :: Proxy API
 api = Proxy
@@ -49,12 +52,22 @@ server = handleVideo
 application :: Application
 application = serve api server
 
+handleVideo1 :: Int -> ConfigM (Maybe (Video VideoId))
+handleVideo1 videoId = do
+  connection <- asks psqlConnection
+  maybeVideo <- liftIO $ getVideoById connection (VideoId videoId)
+  return maybeVideo
+
+app :: Config -> Application
+app config = serve api $ enter nt $ handleVideo1
+  where nt = NT $ (\m -> runReaderT (runConfigM m) config)
+
 main :: IO ()
 main = do
   -- Connection info gets passed via environment variables
   config <- getConfig
   port <- getPort
-  run port (logStdoutDev application)
+  run port (logStdoutDev (app config))
   {--
   scottyT port (\m -> runReaderT (runConfigM m) config) $ do
     middleware logStdoutDev
