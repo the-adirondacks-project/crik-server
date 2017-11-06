@@ -30,7 +30,7 @@ import Routes.Video
   , getVideoFilesHandler
   , getVideos
   , newVideoHandler
-  , setupVideoRoutes
+  , updateVideoHandler
   )
 import Routes.VideoLibrary (setupVideoLibrariesRoutes)
 
@@ -62,6 +62,7 @@ server :: Config -> Server API
 server config = enter nt $
   getVideos :<|>
   newVideoHandler :<|>
+  updateVideoHandler :<|>
   getVideo :<|>
   getVideoFilesForVideoHandler :<|>
   getVideoFileForVideoHandler :<|>
@@ -81,7 +82,6 @@ main = do
   {--
   scottyT port (\m -> runReaderT (runConfigM m) config) $ do
     middleware logStdoutDev
-    setupVideoRoutes
     setupVideoLibrariesRoutes
   --}
   return ()

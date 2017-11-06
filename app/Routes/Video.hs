@@ -8,18 +8,16 @@ module Routes.Video
 , getVideoFilesHandler
 , getVideos
 , newVideoHandler
-, setupVideoRoutes
+, updateVideoHandler
 ) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (asks, lift)
 import Data.Text.Lazy (Text)
 import Database.PostgreSQL.Simple (Connection)
-import Network.HTTP.Types.Status (status404)
-import Web.Scotty.Trans (ScottyError, ScottyT, get, json, jsonData, param, post, put, status)
 
 import Data.Proxy (Proxy(Proxy))
-import Servant.API (Capture, Get, JSON, Post, ReqBody, (:>), (:<|>))
+import Servant.API (Capture, Get, JSON, Post, Put, ReqBody, (:>), (:<|>))
 import Servant (err404, throwError)
 
 import Config (Config(..), ConfigM(..))
@@ -31,6 +29,7 @@ import Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
 type VideoAPI = "videos" :> (
     Get '[JSON] [Video VideoId] :<|>
     ReqBody '[JSON] (Video NoId) :> Post '[JSON] (Video VideoId) :<|>
+    Capture "videoId" Int :> ReqBody '[JSON] (Video NoId) :> Put '[JSON] (Video VideoId) :<|>
     Capture "videoId" Int :> Get '[JSON] (Video VideoId) :<|>
     Capture "videoId" Int :> "files" :> Get '[JSON] [VideoFile] :<|>
     Capture "videoId" Int :> "files" :> Capture "videoFileId" Int :> Get '[JSON] VideoFile :<|>
@@ -52,6 +51,14 @@ newVideoHandler :: (Video NoId) -> ConfigM (Video VideoId)
 newVideoHandler newVideo = do
   connection <- asks psqlConnection
   liftIO $ insertVideo connection newVideo
+
+updateVideoHandler :: Int -> (Video NoId) -> ConfigM (Video VideoId)
+updateVideoHandler videoId videoUpdate = do
+  connection <- asks psqlConnection
+  maybeUpdatedVideo <- liftIO $ updateVideo connection (VideoId videoId) videoUpdate
+  case maybeUpdatedVideo of
+    Nothing -> throwError err404
+    Just x -> return x
 
 getVideos :: ConfigM ([Video VideoId])
 getVideos = do
@@ -83,17 +90,3 @@ getVideoFileForVideoHandler videoId videoFileId = do
   case maybeVideoFile of
     Nothing -> throwError err404
     Just x -> return x
-
--- Well for some reason making this ScottyT Text ConfigM () works but (ScottyError e) => ScottyT e ConfigM () does not.
--- I think because I am not giving it an error type when I use it so I'm just doing this for now until I figure out what
--- I want to do for errors.
-setupVideoRoutes :: ScottyT Text ConfigM ()
-setupVideoRoutes = do
-  put "/api/videos/:id" $ do
-    id :: Int <- param "id"
-    videoUpdate <- jsonData
-    connection <- lift $ asks psqlConnection
-    maybeUpdatedVideo <- liftIO $ updateVideo connection (VideoId id) videoUpdate
-    case maybeUpdatedVideo of
-      Nothing -> status status404
-      Just video -> json video
