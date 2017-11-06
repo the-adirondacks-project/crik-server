@@ -24,6 +24,7 @@ import Routes.Video
   (
     VideoAPI
   , getVideo
+  , getVideoFileForVideoHandler
   , getVideoFileHandler
   , getVideoFilesForVideoHandler
   , getVideoFilesHandler
@@ -63,6 +64,7 @@ server config = enter nt $
   newVideoHandler :<|>
   getVideo :<|>
   getVideoFilesForVideoHandler :<|>
+  getVideoFileForVideoHandler :<|>
   getVideoFilesHandler :<|>
   getVideoFileHandler
   where nt = NT $ (\m -> runReaderT (runConfigM m) config)

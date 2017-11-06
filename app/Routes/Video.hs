@@ -2,6 +2,7 @@ module Routes.Video
 (
   VideoAPI
 , getVideo
+, getVideoFileForVideoHandler
 , getVideoFileHandler
 , getVideoFilesForVideoHandler
 , getVideoFilesHandler
@@ -32,6 +33,7 @@ type VideoAPI = "videos" :> (
     ReqBody '[JSON] (Video NoId) :> Post '[JSON] (Video VideoId) :<|>
     Capture "videoId" Int :> Get '[JSON] (Video VideoId) :<|>
     Capture "videoId" Int :> "files" :> Get '[JSON] [VideoFile] :<|>
+    Capture "videoId" Int :> "files" :> Capture "videoFileId" Int :> Get '[JSON] VideoFile :<|>
     "files" :> (
       Get '[JSON] [VideoFile] :<|>
       Capture "videoFileId" Int :> Get '[JSON] VideoFile
@@ -74,6 +76,14 @@ getVideoFilesForVideoHandler videoId = do
   connection <- asks psqlConnection
   liftIO $ getVideoFiles connection (Just (VideoId videoId)) Nothing
 
+getVideoFileForVideoHandler :: Int -> Int -> ConfigM (VideoFile)
+getVideoFileForVideoHandler videoId videoFileId = do
+  connection <- asks psqlConnection
+  maybeVideoFile <- liftIO $ getVideoFile connection (Just (VideoId videoId)) (VideoFileId videoFileId)
+  case maybeVideoFile of
+    Nothing -> throwError err404
+    Just x -> return x
+
 -- Well for some reason making this ScottyT Text ConfigM () works but (ScottyError e) => ScottyT e ConfigM () does not.
 -- I think because I am not giving it an error type when I use it so I'm just doing this for now until I figure out what
 -- I want to do for errors.
@@ -85,13 +95,5 @@ setupVideoRoutes = do
     connection <- lift $ asks psqlConnection
     maybeUpdatedVideo <- liftIO $ updateVideo connection (VideoId id) videoUpdate
     case maybeUpdatedVideo of
-      Nothing -> status status404
-      Just video -> json video
-  get "/api/videos/:videoId/files/:videoFileId" $ do
-    videoId :: Int <- param "videoId"
-    videoFileId :: Int <- param "videoFileId"
-    connection <- lift $ asks psqlConnection
-    maybeVideo <- liftIO $ getVideoFile connection (Just (VideoId videoId)) (VideoFileId videoFileId)
-    case maybeVideo of
       Nothing -> status status404
       Just video -> json video
