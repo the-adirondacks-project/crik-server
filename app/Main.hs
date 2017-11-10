@@ -1,27 +1,17 @@
 
-import Control.Monad.Reader (runReaderT)
 import Data.Proxy (Proxy(..))
 import Database.PostgreSQL.Simple (connectPostgreSQL)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Servant (Server, (:~>)(..), (:<|>)(..), enter, serve)
+import Servant (Server, (:<|>)(..), serve)
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
-import Config (Config(..), ConfigM(..))
+import Config (Config(..))
 import Routes (API)
-import Routes.Video
-  (
-    getVideo
-  , getVideoFileForVideoHandler
-  , getVideoFileHandler
-  , getVideoFilesForVideoHandler
-  , getVideoFilesHandler
-  , getVideos
-  , newVideoHandler
-  , updateVideoHandler
-  )
+import Routes.Video (videoServer)
+import Routes.VideoLibrary (videoLibraryServer)
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
@@ -46,16 +36,7 @@ api :: Proxy API
 api = Proxy
 
 server :: Config -> Server API
-server config = enter nt $
-  getVideos :<|>
-  newVideoHandler :<|>
-  updateVideoHandler :<|>
-  getVideo :<|>
-  getVideoFilesForVideoHandler :<|>
-  getVideoFileForVideoHandler :<|>
-  getVideoFilesHandler :<|>
-  getVideoFileHandler
-  where nt = NT (\m -> runReaderT (runConfigM m) config)
+server config = (videoServer config) :<|> (videoLibraryServer config)
 
 app :: Config -> Application
 app config = serve api (server config)

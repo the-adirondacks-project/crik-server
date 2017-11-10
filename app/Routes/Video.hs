@@ -9,18 +9,20 @@ module Routes.Video
 , getVideos
 , newVideoHandler
 , updateVideoHandler
+, videoServer
 ) where
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
-import Servant (err404, throwError)
-import Servant.API (Capture, Get, JSON, Post, Put, ReqBody, (:>), (:<|>))
+import Servant (Server, enter, err404, throwError)
+import Servant.API (Capture, Get, JSON, Post, Put, ReqBody, (:>), (:<|>)((:<|>)))
 
 import Config (Config(..), ConfigM(..))
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 import Database.VideoFile (getVideoFile, getVideoFiles)
 import Types.Video (NoId, Video, VideoId(VideoId))
 import Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
+import Utils (makeHandler)
 
 type VideoAPI = "videos" :> (
     Get '[JSON] [Video VideoId] :<|>
@@ -34,6 +36,17 @@ type VideoAPI = "videos" :> (
       Capture "videoFileId" Int :> Get '[JSON] VideoFile
     )
   )
+
+videoServer :: Config -> Server VideoAPI
+videoServer config = enter (makeHandler config) $
+  getVideos :<|>
+  newVideoHandler :<|>
+  updateVideoHandler :<|>
+  getVideo :<|>
+  getVideoFilesForVideoHandler :<|>
+  getVideoFileForVideoHandler :<|>
+  getVideoFilesHandler :<|>
+  getVideoFileHandler
 
 getVideo :: Int -> ConfigM (Video VideoId)
 getVideo videoId = do
