@@ -1,6 +1,10 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Types
 (
   NoId(..)
 ) where
 
-data NoId = NoId deriving (Show)
+import GHC.Generics (Generic)
+
+data NoId = NoId deriving (Show, Generic)

@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Types.VideoFile
 (
   VideoFile(..)
@@ -13,11 +15,12 @@ import Database.PostgreSQL.Simple.FromRow (field, FromRow(fromRow))
 import Database.PostgreSQL.Simple.ToField (ToField(toField))
 import Database.PostgreSQL.Simple.ToRow (ToRow(toRow))
 import Data.Text (Text)
+import GHC.Generics (Generic)
 
 import Types.Video (VideoId)
 import Types.VideoLibrary (VideoLibraryId)
 
-newtype VideoFileId = VideoFileId { unVideoFileId :: Int }
+newtype VideoFileId = VideoFileId { unVideoFileId :: Int } deriving (Generic)
 
 $(deriveJSON defaultOptions{unwrapUnaryRecords=True} ''VideoFileId)
 
@@ -29,7 +32,7 @@ instance FromField VideoFileId where
 instance ToField VideoFileId where
   toField VideoFileId{..} = toField unVideoFileId
 
-newtype VideoFileStorageId = VideoFileStorageId { unVideoFileStorageId :: Text }
+newtype VideoFileStorageId = VideoFileStorageId { unVideoFileStorageId :: Text } deriving (Generic)
 
 $(deriveJSON defaultOptions{unwrapUnaryRecords=True} ''VideoFileStorageId)
 
@@ -47,7 +50,7 @@ data VideoFile = VideoFile {
   videoFileUrl :: Text,
   videoLibraryId :: VideoLibraryId,
   videoFileStorageId :: VideoFileStorageId
-}
+} deriving (Generic)
 
 instance FromRow VideoFile where
   fromRow = VideoFile <$> field <*> field <*> field <*> field <*> field
