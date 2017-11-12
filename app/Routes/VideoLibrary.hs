@@ -10,24 +10,22 @@ import Data.List ((\\))
 import Data.Text (Text, stripPrefix, pack, unpack)
 import Prelude hiding (FilePath)
 import Servant (ServerT, enter, err404, err422, err500, throwError)
-import Servant.API (Capture, Get, JSON, (:>), (:<|>)(..))
+import Servant.API ((:<|>)((:<|>)))
 import System.Directory (listDirectory)
 
+import API (VideoLibraryAPI)
 import Config (Config(..), ConfigM(..))
 import Database.VideoLibrary (getAllVideoLibraries, getVideoLibraryById)
 import Database.VideoFile (getVideoFiles)
 import Types.VideoLibrary (VideoLibrary(..), VideoLibraryId(VideoLibraryId))
 import Types.VideoFile (VideoFile(videoFileStorageId), VideoFileStorageId(unVideoFileStorageId))
 
-type VideoLibraryAPI = "video_libraries" :> (
-    Get '[JSON] [VideoLibrary] :<|>
-    Capture "videoLibraryId" Int :> Get '[JSON] VideoLibrary :<|>
-    Capture "videoLibraryId" Int :> "new_files" :> Get '[JSON] [Text] :<|>
-    Capture "videoLibraryId" Int :> "all_files" :> Get '[JSON] [Text]
-  )
-
 videoLibraryServer :: ServerT VideoLibraryAPI ConfigM
-videoLibraryServer = getVideoLibraries :<|> getVideoLibrary :<|> getNewFilesInLibrary :<|> getAllFilesInLibrary
+videoLibraryServer =
+  getVideoLibraries :<|>
+  getVideoLibrary :<|>
+  getNewFilesInLibrary :<|>
+  getAllFilesInLibrary
 
 getVideoLibraries :: ConfigM [VideoLibrary]
 getVideoLibraries = do

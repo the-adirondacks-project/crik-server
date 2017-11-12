@@ -17,24 +17,12 @@ import Control.Monad.Reader (asks)
 import Servant (ServerT, enter, err404, throwError)
 import Servant.API (Capture, Get, JSON, Post, Put, ReqBody, (:>), (:<|>)((:<|>)))
 
+import API (VideoAPI)
 import Config (Config(..), ConfigM(..))
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 import Database.VideoFile (getVideoFile, getVideoFiles)
 import Types.Video (NoId, Video, VideoId(VideoId))
 import Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
-
-type VideoAPI = "videos" :> (
-    Get '[JSON] [Video VideoId] :<|>
-    ReqBody '[JSON] (Video NoId) :> Post '[JSON] (Video VideoId) :<|>
-    Capture "videoId" Int :> ReqBody '[JSON] (Video NoId) :> Put '[JSON] (Video VideoId) :<|>
-    Capture "videoId" Int :> Get '[JSON] (Video VideoId) :<|>
-    Capture "videoId" Int :> "files" :> Get '[JSON] [VideoFile] :<|>
-    Capture "videoId" Int :> "files" :> Capture "videoFileId" Int :> Get '[JSON] VideoFile :<|>
-    "files" :> (
-      Get '[JSON] [VideoFile] :<|>
-      Capture "videoFileId" Int :> Get '[JSON] VideoFile
-    )
-  )
 
 videoServer :: ServerT VideoAPI ConfigM
 videoServer =
