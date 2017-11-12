@@ -48,15 +48,12 @@ executable tap-video-exe
                        aeson
                      , base
                      , directory
-                     , http-types
                      , mtl
                      , postgresql-simple
-                     , scotty
                      , servant
                      , servant-server
                      , tap-video
                      , text
-                     , transformers
                      , wai
                      , wai-extra
                      , warp

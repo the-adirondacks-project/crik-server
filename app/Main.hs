@@ -50,9 +50,4 @@ main = do
   config <- getConfig
   port <- getPort
   run port (logStdoutDev (app config))
-  {--
-  scottyT port (\m -> runReaderT (runConfigM m) config) $ do
-    middleware logStdoutDev
-    setupVideoLibrariesRoutes
-  --}
   return ()
