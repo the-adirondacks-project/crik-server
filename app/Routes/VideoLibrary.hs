@@ -1,18 +1,17 @@
 module Routes.VideoLibrary
 (
-  setupVideoLibrariesRoutes
+  VideoLibraryAPI
+, videoLibraryServer
 ) where
 
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (asks, lift)
+import Control.Monad.Reader (asks)
 import Data.List ((\\))
-import Data.Text (Text, isPrefixOf, stripPrefix, pack, unpack)
-import qualified Data.Text.Lazy as LT (Text)
-import Database.PostgreSQL.Simple (Connection)
-import Network.HTTP.Types.Status (status404, status422, status500)
+import Data.Text (Text, stripPrefix, pack, unpack)
 import Prelude hiding (FilePath)
+import Servant (ServerT, enter, err404, err422, err500, throwError)
+import Servant.API (Capture, Get, JSON, (:>), (:<|>)(..))
 import System.Directory (listDirectory)
-import Web.Scotty.Trans (ScottyT, get, json, param, status)
 
 import Config (Config(..), ConfigM(..))
 import Database.VideoLibrary (getAllVideoLibraries, getVideoLibraryById)
@@ -20,59 +19,61 @@ import Database.VideoFile (getVideoFiles)
 import Types.VideoLibrary (VideoLibrary(..), VideoLibraryId(VideoLibraryId))
 import Types.VideoFile (VideoFile(videoFileStorageId), VideoFileStorageId(unVideoFileStorageId))
 
-setupVideoLibrariesRoutes :: ScottyT LT.Text ConfigM ()
-setupVideoLibrariesRoutes = do
-  get "/api/video_libraries" $ do
-    connection <- lift $ asks psqlConnection
-    videoLibraries <- liftIO $ getAllVideoLibraries connection
-    json videoLibraries
-  get "/api/video_libraries/:videoLibraryId" $ do
-    videoLibraryId :: Int <- param "videoLibraryId"
-    connection <- lift $ asks psqlConnection
-    videoLibraries <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
-    json videoLibraries
-  get "/api/video_libraries/:videoLibraryId/all_files" $ do
-    videoLibraryId :: Int <- param "videoLibraryId"
-    connection <- lift $ asks psqlConnection
-    maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
-    case maybeVideoLibrary of
-      Just videoLibrary -> do
-        case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
-          Just filePath -> do
-            files <- liftIO $ findAllFilesInLibrary filePath
-            json files
-          Nothing -> status status422
-      Nothing -> status status404
-  get "/api/video_libraries/:videoLibraryId/new_files" $ do
-    videoLibraryId :: Int <- param "videoLibraryId"
-    connection <- lift $ asks psqlConnection
-    maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
-    case maybeVideoLibrary of
-      Just videoLibrary -> do
-        case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
-          Just filePath -> do
-            maybeFiles <- liftIO $ findAllFilesInLibrary filePath
-            case maybeFiles of
-              Just files -> do
-                videoFiles <- liftIO $ getVideoFiles connection Nothing Nothing
-                json (files \\ (map (unVideoFileStorageId . videoFileStorageId) videoFiles))
-              Nothing -> status status500
-          Nothing -> status status422
-      Nothing -> status status404
-  get "/api/videos/:id" $ do
-    id :: Int <- param "id"
-    connection <- lift $ asks psqlConnection
-    maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId id)
-    case maybeVideoLibrary of
-      Nothing -> status status404
-      Just videoLibrary -> json videoLibrary
+type VideoLibraryAPI = "video_libraries" :> (
+    Get '[JSON] [VideoLibrary] :<|>
+    Capture "videoLibraryId" Int :> Get '[JSON] VideoLibrary :<|>
+    Capture "videoLibraryId" Int :> "new_files" :> Get '[JSON] [Text] :<|>
+    Capture "videoLibraryId" Int :> "all_files" :> Get '[JSON] [Text]
+  )
+
+videoLibraryServer :: ServerT VideoLibraryAPI ConfigM
+videoLibraryServer = getVideoLibraries :<|> getVideoLibrary :<|> getNewFilesInLibrary :<|> getAllFilesInLibrary
+
+getVideoLibraries :: ConfigM [VideoLibrary]
+getVideoLibraries = do
+  connection <- asks psqlConnection
+  liftIO $ getAllVideoLibraries connection
+
+getVideoLibrary :: Int -> ConfigM VideoLibrary
+getVideoLibrary videoLibraryId = do
+  connection <- asks psqlConnection
+  maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
+  case maybeVideoLibrary of
+    Nothing -> throwError err404
+    Just x -> return x
+
+getNewFilesInLibrary :: Int -> ConfigM [Text]
+getNewFilesInLibrary videoLibraryId = do
+  connection <- asks psqlConnection
+  maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
+  case maybeVideoLibrary of
+    Just videoLibrary -> do
+      case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
+        Just filePath -> do
+          files <- liftIO $ findAllFilesInLibrary filePath
+          videoFiles <- liftIO $ getVideoFiles connection Nothing Nothing
+          return (files \\ (map (unVideoFileStorageId . videoFileStorageId) videoFiles))
+        Nothing -> throwError err422
+    Nothing -> throwError err404
+
+getAllFilesInLibrary :: Int -> ConfigM [Text]
+getAllFilesInLibrary videoLibraryId = do
+  connection <- asks psqlConnection
+  maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
+  case maybeVideoLibrary of
+    Just videoLibrary -> do
+      case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
+        Just filePath -> do
+          liftIO $ findAllFilesInLibrary filePath
+        Nothing -> throwError err422
+    Nothing -> throwError err404
 
 newtype FilePath = FilePath { unFilePath :: Text }
 
-findAllFilesInLibrary :: FilePath -> IO (Maybe [Text])
+findAllFilesInLibrary :: FilePath -> IO [Text]
 findAllFilesInLibrary filePath = do
     files <- listDirectory ((unpack . unFilePath) filePath)
-    return $ Just (map pack files)
+    return (map pack files)
 
 getFilePathFromFileURI :: Text -> Maybe (FilePath)
 getFilePathFromFileURI uri =
