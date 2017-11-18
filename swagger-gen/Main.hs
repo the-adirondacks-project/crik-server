@@ -40,11 +40,11 @@ instance ToParamSchema VideoLibraryId
 apiSwagger :: Swagger
 apiSwagger = toSwagger (Proxy :: Proxy API)
 
-addResponse statusCode statusDescription subAPI fullAPI swagger =
+addResponseCode statusCode statusDescription subAPI fullAPI swagger =
   setResponseFor (subOperations subAPI fullAPI) statusCode (return responseSchema) swagger
   where responseSchema = (mempty :: Response) & description .~ statusDescription
 
 main :: IO ()
 main = do
-  let swagger = addResponse 422 "foo" (Proxy :: Proxy AllFiles) (Proxy :: Proxy API) apiSwagger
+  let swagger = addResponseCode 422 "foo" (Proxy :: Proxy AllFiles) (Proxy :: Proxy API) apiSwagger
   BL8.writeFile "swagger.json" $ encodePretty swagger
