@@ -37,15 +37,14 @@ instance ToParamSchema VideoLibraryId
 
 --newFiles = subOperations (Proxy :: Proxy ("video_libraries" :> NewFiles)) (Proxy :: Proxy VideoLibraryAPI)
 
-responseSchema = (mempty :: Response) & description .~ "HGurra"
-
 apiSwagger :: Swagger
-apiSwagger = toSwagger (Proxy :: Proxy VideoLibraryAPI)
+apiSwagger = toSwagger (Proxy :: Proxy API)
 
-addResponse swagger = setResponseFor
-  (subOperations (Proxy :: Proxy AllFiles) (Proxy :: Proxy VideoLibraryAPI))
-  422 (return responseSchema) swagger
+addResponse statusCode statusDescription subAPI fullAPI swagger =
+  setResponseFor (subOperations subAPI fullAPI) statusCode (return responseSchema) swagger
+  where responseSchema = (mempty :: Response) & description .~ statusDescription
 
 main :: IO ()
 main = do
-  BL8.writeFile "swagger.json" $ encodePretty $ (addResponse apiSwagger)
+  let swagger = addResponse 422 "foo" (Proxy :: Proxy AllFiles) (Proxy :: Proxy API) apiSwagger
+  BL8.writeFile "swagger.json" $ encodePretty swagger
