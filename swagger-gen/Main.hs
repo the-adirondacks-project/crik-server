@@ -3,6 +3,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 
+import Data.HashMap.Strict.InsOrd
 import Types.Video
 import Types.VideoLibrary
 import Types.VideoFile
@@ -18,20 +19,57 @@ import Data.Aeson.Encode.Pretty
 
 myOptions = defaultSchemaOptions{unwrapUnaryRecords=True}
 
-instance ToSchema VideoFile
 instance ToSchema VideoFileId where declareNamedSchema = genericDeclareNamedSchema myOptions
-instance ToSchema (Video VideoId)
+instance ToSchema VideoFileStorageId where declareNamedSchema = genericDeclareNamedSchema myOptions
+instance ToSchema VideoId where declareNamedSchema = genericDeclareNamedSchema myOptions
+instance ToSchema VideoLibraryId where declareNamedSchema = genericDeclareNamedSchema myOptions
+
+instance ToSchema VideoFile where
+  declareNamedSchema _ = do
+    videoFileIdSchema <- declareSchemaRef (Proxy :: Proxy VideoFileId)
+    videoIdSchema <- declareSchemaRef (Proxy :: Proxy VideoId)
+    videoLibraryIdSchema <- declareSchemaRef (Proxy :: Proxy VideoLibraryId)
+    videoFileStorageIdSchema <- declareSchemaRef (Proxy :: Proxy VideoFileStorageId)
+    videoFileUrlSchema <- declareSchemaRef (Proxy :: Proxy Text)
+    return $ NamedSchema (Just "VideoFile") $ mempty
+      & type_ .~ SwaggerObject
+      & properties .~ [
+        ("id", videoFileIdSchema)
+      , ("videoId", videoIdSchema)
+      , ("videoLibraryId", videoLibraryIdSchema)
+      , ("videoFileStorageId", videoFileStorageIdSchema)
+      , ("videoFileUrl", videoFileUrlSchema)
+      ]
+      & required .~ ["id", "videoId", "videoLibraryId", "videoFileStorageId", "videoFileUrl"]
+
+instance ToSchema (Video VideoId) where
+  declareNamedSchema _ = do
+    idSchema <- declareSchemaRef (Proxy :: Proxy VideoId)
+    return $ NamedSchema (Just "Video") $ toSchema (Proxy :: Proxy (Video NoId))
+      & type_ .~ SwaggerObject
+      & properties %~ (union [("id", idSchema)])
+      & required %~ (++ ["id"])
+
 instance ToSchema (Video NoId) where
   declareNamedSchema _ = do
     nameSchema <- declareSchemaRef (Proxy :: Proxy Text)
     return $ NamedSchema (Just "NewVideo") $ mempty
       & type_ .~ SwaggerObject
-      & properties .~ [ ("name", nameSchema) ]
-      & required .~ [ "name" ]
-instance ToSchema VideoId
-instance ToSchema VideoLibrary
-instance ToSchema VideoLibraryId where declareNamedSchema = genericDeclareNamedSchema myOptions
-instance ToSchema VideoFileStorageId where declareNamedSchema = genericDeclareNamedSchema myOptions
+      & properties .~ [("name", nameSchema)]
+      & required .~ ["name"]
+
+instance ToSchema VideoLibrary where
+  declareNamedSchema _ = do
+    videoLibraryIdSchema <- declareSchemaRef (Proxy :: Proxy VideoLibraryId)
+    videoLibraryUrlSchema <- declareSchemaRef (Proxy :: Proxy Text)
+    return $ NamedSchema (Just "VideoLibrary") $ mempty
+      & type_ .~ SwaggerObject
+      & properties .~ [
+        ("id", videoLibraryIdSchema)
+      , ("videoLibraryUrl", videoLibraryUrlSchema)
+      ]
+      & required .~ ["id", "videoLibraryUrl"]
+
 instance ToParamSchema VideoId
 instance ToParamSchema VideoLibraryId
 

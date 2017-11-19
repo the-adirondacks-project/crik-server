@@ -7,7 +7,6 @@ module Types.Video
 , Video(..)
 ) where
 
-
 import Data.Aeson (ToJSON(toJSON, toEncoding), FromJSON(..), (.=), object, pairs)
 import Data.Aeson.Types
 import Data.Aeson.TH (deriveJSON, defaultOptions, unwrapUnaryRecords)
@@ -34,10 +33,6 @@ instance ToField VideoId where
 $(deriveJSON defaultOptions{unwrapUnaryRecords=True} ''VideoId)
 
 data Video id = Video { videoId :: id , videoName :: Text } deriving (Show, Generic)
-
-data WithId a b = WithId { id :: a, unWithId :: b }
-data VideoWithoutId = VideoWithoutId { name :: Text }
-data VideoWithId = Video' VideoId VideoWithoutId
 
 instance (FromField t) => FromRow (Video t) where
   fromRow = Video <$> field <*> field

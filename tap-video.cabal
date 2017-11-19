@@ -46,6 +46,7 @@ executable tap-swagger-gen
                      , aeson-pretty
                      , bytestring
                      , base
+                     , insert-ordered-containers
                      , lens
                      , servant
                      , servant-swagger
