@@ -82,7 +82,15 @@ addResponseCode statusCode statusDescription subAPI fullAPI swagger =
   setResponseFor (subOperations subAPI fullAPI) statusCode (return responseSchema) swagger
   where responseSchema = (mempty :: Response) & description .~ statusDescription
 
+addAllVideoLibraryFilesResponses :: Swagger -> Swagger
+addAllVideoLibraryFilesResponses =
+  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy AllFiles) (Proxy :: Proxy API)
+
+addNewVideoLibraryFilesResponses :: Swagger -> Swagger
+addNewVideoLibraryFilesResponses =
+  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy NewFiles) (Proxy :: Proxy API)
+
 main :: IO ()
 main = do
-  let swagger = addResponseCode 422 "foo" (Proxy :: Proxy AllFiles) (Proxy :: Proxy API) apiSwagger
+  let swagger = (addAllVideoLibraryFilesResponses . addNewVideoLibraryFilesResponses) apiSwagger
   BL8.writeFile "swagger.json" $ encodePretty swagger

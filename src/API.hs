@@ -35,8 +35,8 @@ type VideoAPI = "videos" :> (
 type VideoLibraryAPI =
     "video_libraries" :> Get '[JSON] [VideoLibrary] :<|>
     "video_libraries" :> Capture "videoLibraryId" Int :> Get '[JSON] VideoLibrary :<|>
-    "video_libraries" :> NewFiles :<|>
-    "video_libraries" :> Capture "videoLibraryId" Int :> "all_files" :> Get '[JSON] [Text]
+    NewFiles :<|>
+    AllFiles
 
-type NewFiles = Capture "videoLibraryId" Int :> "new_files" :> Get '[JSON] [Text]
+type NewFiles = "video_libraries" :> Capture "videoLibraryId" Int :> "new_files" :> Get '[JSON] [Text]
 type AllFiles = "video_libraries" :> Capture "videoLibraryId" Int :> "all_files" :> Get '[JSON] [Text]
