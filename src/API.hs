@@ -37,7 +37,8 @@ type VideoLibraryAPI =
     GetVideoLibrary :<|>
     GetNewFilesInVideoLibrary :<|>
     GetAllFilesInVideoLibrary :<|>
-    CreateVideoLibrary
+    CreateVideoLibrary :<|>
+    UpdateVideoLibrary
 
 type GetVideoLibraries = "video_libraries" :> Get '[JSON] [VideoLibrary VideoLibraryId]
 type GetVideoLibrary = "video_libraries" :> Capture "videoLibraryId" Int :> Get '[JSON] (VideoLibrary VideoLibraryId)
@@ -45,3 +46,5 @@ type GetNewFilesInVideoLibrary = "video_libraries" :> Capture "videoLibraryId" I
 type GetAllFilesInVideoLibrary = "video_libraries" :> Capture "videoLibraryId" Int :> "all_files" :> Get '[JSON] [Text]
 type CreateVideoLibrary = "video_libraries" :> ReqBody '[JSON] (VideoLibrary NoId) :>
   Post '[JSON] (VideoLibrary VideoLibraryId)
+type UpdateVideoLibrary = "video_libraries" :> Capture "videoLibraryId" Int :> ReqBody '[JSON] (VideoLibrary NoId) :>
+  Put '[JSON] (VideoLibrary VideoLibraryId)

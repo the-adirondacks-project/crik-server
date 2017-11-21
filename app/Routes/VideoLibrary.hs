@@ -15,7 +15,7 @@ import System.Directory (listDirectory)
 
 import API (VideoLibraryAPI)
 import Config (Config(..), ConfigM(..))
-import Database.VideoLibrary (getAllVideoLibraries, getVideoLibraryById, insertVideoLibrary)
+import Database.VideoLibrary (getAllVideoLibraries, getVideoLibraryById, insertVideoLibrary, updateVideoLibrary)
 import Database.VideoFile (getVideoFiles)
 import Types (NoId(NoId))
 import Types.VideoLibrary (VideoLibrary(..), VideoLibraryId(VideoLibraryId))
@@ -27,7 +27,8 @@ videoLibraryServer =
   getVideoLibrary :<|>
   getNewFilesInLibrary :<|>
   getAllFilesInLibrary :<|>
-  createVideoLibraryHandler
+  createVideoLibraryHandler :<|>
+  updateVideoLibraryHandler
 
 getVideoLibraries :: ConfigM [VideoLibrary VideoLibraryId]
 getVideoLibraries = do
@@ -72,6 +73,14 @@ createVideoLibraryHandler :: VideoLibrary NoId -> ConfigM (VideoLibrary VideoLib
 createVideoLibraryHandler newVideoLibrary = do
   connection <- asks psqlConnection
   liftIO $ insertVideoLibrary connection newVideoLibrary
+
+updateVideoLibraryHandler :: Int -> VideoLibrary NoId -> ConfigM (VideoLibrary VideoLibraryId)
+updateVideoLibraryHandler videoLibraryId videoLibraryUpdate = do
+  connection <- asks psqlConnection
+  maybeUpdatedVideoLibrary <- liftIO $ updateVideoLibrary connection (VideoLibraryId videoLibraryId) videoLibraryUpdate
+  case maybeUpdatedVideoLibrary of
+    Nothing -> throwError err404
+    Just x -> return x
 
 newtype FilePath = FilePath { unFilePath :: Text }
 

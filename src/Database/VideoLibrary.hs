@@ -3,6 +3,7 @@ module Database.VideoLibrary
   getAllVideoLibraries
 , getVideoLibraryById
 , insertVideoLibrary
+, updateVideoLibrary
 ) where
 
 import Control.Exception (throw)
@@ -11,7 +12,7 @@ import Database.PostgreSQL.Simple (Connection, Only(Only), query, query_)
 
 import Database.Error (DatabaseException(..))
 import Types (NoId)
-import Types.VideoLibrary (VideoLibraryId, VideoLibrary)
+import Types.VideoLibrary (VideoLibraryId, VideoLibrary(..))
 
 getAllVideoLibraries :: Connection -> IO ([VideoLibrary VideoLibraryId])
 getAllVideoLibraries connection = do
@@ -32,3 +33,13 @@ insertVideoLibrary connection videoLibraryPost = do
     [x] -> return x
     _ -> throw $ InsertReturnedMultiple
       "insertVideoLibrary returned multiple rows when it should have returned just one"
+
+updateVideoLibrary :: Connection -> VideoLibraryId -> VideoLibrary NoId -> IO (Maybe (VideoLibrary VideoLibraryId))
+updateVideoLibrary connection videoLibraryId videoLibraryPost = do
+  rows <- query connection "update video_libraries set url = ? where id = ? returning id, url"
+    (videoLibraryUrl videoLibraryPost, videoLibraryId)
+  case rows of
+    [] -> return Nothing
+    [x] -> return $ Just x
+    _ -> throw $ InsertReturnedMultiple
+      "updateVideoLibrary returned multiple rows when it should have returned just one"
