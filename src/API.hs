@@ -6,8 +6,8 @@ module API
   API
 , VideoAPI
 , VideoLibraryAPI
-, NewFiles
-, AllFiles
+, GetNewFilesInVideoLibrary
+, GetAllFilesInVideoLibrary
 ) where
 
 import Data.Text (Text)
@@ -33,10 +33,12 @@ type VideoAPI = "videos" :> (
   )
 
 type VideoLibraryAPI =
-    "video_libraries" :> Get '[JSON] [VideoLibrary] :<|>
-    "video_libraries" :> Capture "videoLibraryId" Int :> Get '[JSON] VideoLibrary :<|>
-    NewFiles :<|>
-    AllFiles
+    GetVideoLibraries :<|>
+    GetVideoLibrary :<|>
+    GetNewFilesInVideoLibrary :<|>
+    GetAllFilesInVideoLibrary
 
-type NewFiles = "video_libraries" :> Capture "videoLibraryId" Int :> "new_files" :> Get '[JSON] [Text]
-type AllFiles = "video_libraries" :> Capture "videoLibraryId" Int :> "all_files" :> Get '[JSON] [Text]
+type GetVideoLibraries = "video_libraries" :> Get '[JSON] [VideoLibrary]
+type GetVideoLibrary = "video_libraries" :> Capture "videoLibraryId" Int :> Get '[JSON] VideoLibrary
+type GetNewFilesInVideoLibrary = "video_libraries" :> Capture "videoLibraryId" Int :> "new_files" :> Get '[JSON] [Text]
+type GetAllFilesInVideoLibrary = "video_libraries" :> Capture "videoLibraryId" Int :> "all_files" :> Get '[JSON] [Text]
