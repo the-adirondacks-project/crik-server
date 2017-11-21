@@ -36,7 +36,8 @@ type VideoLibraryAPI =
     GetVideoLibraries :<|>
     GetVideoLibrary :<|>
     GetNewFilesInVideoLibrary :<|>
-    GetAllFilesInVideoLibrary
+    GetAllFilesInVideoLibrary :<|>
+    CreateVideoLibrary
 
 type GetVideoLibraries = "video_libraries" :> Get '[JSON] [VideoLibrary VideoLibraryId]
 type GetVideoLibrary = "video_libraries" :> Capture "videoLibraryId" Int :> Get '[JSON] (VideoLibrary VideoLibraryId)

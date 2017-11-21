@@ -49,5 +49,6 @@ main = do
   -- Connection info gets passed via environment variables
   config <- getConfig
   port <- getPort
+  putStrLn ("Starting server on port: " ++ (show port))
   run port (logStdoutDev (app config))
   return ()
