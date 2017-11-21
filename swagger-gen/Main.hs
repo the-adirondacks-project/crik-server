@@ -65,7 +65,7 @@ instance ToSchema (VideoLibrary VideoLibraryId) where
     return $ NamedSchema (Just "VideoLibrary") $ toSchema (Proxy :: Proxy (VideoLibrary NoId))
       & type_ .~ SwaggerObject
       & properties %~ (union [("id", videoLibraryIdSchema)])
-      & required %~ (++ ["videoLibraryUrl"])
+      & required %~ (++ ["id"])
 
 instance ToSchema (VideoLibrary NoId) where
   declareNamedSchema _ = do

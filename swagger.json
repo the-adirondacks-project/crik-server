@@ -42,8 +42,8 @@
         },
         "VideoLibrary": {
             "required": [
-                "id",
-                "videoLibraryUrl"
+                "videoLibraryUrl",
+                "id"
             ],
             "type": "object",
             "properties": {
