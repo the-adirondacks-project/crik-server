@@ -27,12 +27,12 @@ videoLibraryServer =
   getNewFilesInLibrary :<|>
   getAllFilesInLibrary
 
-getVideoLibraries :: ConfigM [VideoLibrary]
+getVideoLibraries :: ConfigM [VideoLibrary VideoLibraryId]
 getVideoLibraries = do
   connection <- asks psqlConnection
   liftIO $ getAllVideoLibraries connection
 
-getVideoLibrary :: Int -> ConfigM VideoLibrary
+getVideoLibrary :: Int -> ConfigM (VideoLibrary VideoLibraryId)
 getVideoLibrary videoLibraryId = do
   connection <- asks psqlConnection
   maybeVideoLibrary <- liftIO $ getVideoLibraryById connection (VideoLibraryId videoLibraryId)
