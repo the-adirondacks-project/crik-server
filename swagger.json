@@ -1,0 +1,439 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "",
+        "title": ""
+    },
+    "definitions": {
+        "VideoFile": {
+            "required": [
+                "id",
+                "videoId",
+                "videoLibraryId",
+                "videoFileStorageId",
+                "videoFileUrl"
+            ],
+            "type": "object",
+            "properties": {
+                "videoLibraryId": {
+                    "$ref": "#/definitions/VideoLibraryId"
+                },
+                "videoFileStorageId": {
+                    "$ref": "#/definitions/VideoFileStorageId"
+                },
+                "videoFileUrl": {
+                    "type": "string"
+                },
+                "videoId": {
+                    "$ref": "#/definitions/VideoId"
+                },
+                "id": {
+                    "$ref": "#/definitions/VideoFileId"
+                }
+            }
+        },
+        "VideoFileStorageId": {
+            "type": "string"
+        },
+        "VideoLibraryId": {
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "type": "integer"
+        },
+        "VideoLibrary": {
+            "required": [
+                "id",
+                "videoLibraryUrl"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "$ref": "#/definitions/VideoLibraryId"
+                },
+                "videoLibraryUrl": {
+                    "type": "string"
+                }
+            }
+        },
+        "Video": {
+            "required": [
+                "name",
+                "id"
+            ],
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "id": {
+                    "$ref": "#/definitions/VideoId"
+                }
+            }
+        },
+        "VideoId": {
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "type": "integer"
+        },
+        "VideoFileId": {
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "type": "integer"
+        },
+        "NewVideo": {
+            "required": [
+                "name"
+            ],
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "paths": {
+        "/videos/files": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/VideoFile"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ]
+            }
+        },
+        "/video_libraries/{videoLibraryId}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`videoLibraryId` not found"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/VideoLibrary"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "parameters": [
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "required": true,
+                        "in": "path",
+                        "name": "videoLibraryId",
+                        "type": "integer"
+                    }
+                ]
+            }
+        },
+        "/videos/{videoId}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`videoId` not found"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Video"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "parameters": [
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "required": true,
+                        "in": "path",
+                        "name": "videoId",
+                        "type": "integer"
+                    }
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "404": {
+                        "description": "`videoId` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Video"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "parameters": [
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "required": true,
+                        "in": "path",
+                        "name": "videoId",
+                        "type": "integer"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/NewVideo"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    }
+                ]
+            }
+        },
+        "/video_libraries/{videoLibraryId}/new_files": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`videoLibraryId` not found"
+                    },
+                    "422": {
+                        "description": "Invalid video library path"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "parameters": [
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "required": true,
+                        "in": "path",
+                        "name": "videoLibraryId",
+                        "type": "integer"
+                    }
+                ]
+            }
+        },
+        "/video_libraries/{videoLibraryId}/all_files": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`videoLibraryId` not found"
+                    },
+                    "422": {
+                        "description": "Invalid video library path"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "parameters": [
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "required": true,
+                        "in": "path",
+                        "name": "videoLibraryId",
+                        "type": "integer"
+                    }
+                ]
+            }
+        },
+        "/videos/{videoId}/files/{videoFileId}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`videoId` or `videoFileId` not found"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/VideoFile"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "parameters": [
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "required": true,
+                        "in": "path",
+                        "name": "videoId",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "required": true,
+                        "in": "path",
+                        "name": "videoFileId",
+                        "type": "integer"
+                    }
+                ]
+            }
+        },
+        "/videos/files/{videoFileId}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`videoFileId` not found"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/VideoFile"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "parameters": [
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "required": true,
+                        "in": "path",
+                        "name": "videoFileId",
+                        "type": "integer"
+                    }
+                ]
+            }
+        },
+        "/videos/{videoId}/files": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`videoId` not found"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/VideoFile"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "parameters": [
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "required": true,
+                        "in": "path",
+                        "name": "videoId",
+                        "type": "integer"
+                    }
+                ]
+            }
+        },
+        "/videos": {
+            "post": {
+                "consumes": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Video"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/NewVideo"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    }
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Video"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ]
+            }
+        },
+        "/video_libraries": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/VideoLibrary"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json;charset=utf-8"
+                ]
+            }
+        }
+    }
+}

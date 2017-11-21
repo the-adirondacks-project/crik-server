@@ -1,10 +1,11 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Types.Video
 (
   NoId(..)
 , VideoId(..)
 , Video(..)
 ) where
-
 
 import Data.Aeson (ToJSON(toJSON, toEncoding), FromJSON(..), (.=), object, pairs)
 import Data.Aeson.Types
@@ -15,10 +16,11 @@ import Database.PostgreSQL.Simple.FromRow (field, FromRow(fromRow))
 import Database.PostgreSQL.Simple.ToField (ToField(toField))
 import Database.PostgreSQL.Simple.ToRow (ToRow(toRow))
 import Data.Text (Text)
+import GHC.Generics (Generic)
 
 import Types (NoId(NoId))
 
-newtype VideoId = VideoId { unVideoId :: Int } deriving (Show)
+newtype VideoId = VideoId { unVideoId :: Int } deriving (Show, Generic)
 
 instance FromField VideoId where
   fromField field rawData = do
@@ -30,7 +32,7 @@ instance ToField VideoId where
 
 $(deriveJSON defaultOptions{unwrapUnaryRecords=True} ''VideoId)
 
-data Video id = Video { videoId :: id , videoName :: Text } deriving (Show)
+data Video id = Video { videoId :: id , videoName :: Text } deriving (Show, Generic)
 
 instance (FromField t) => FromRow (Video t) where
   fromRow = Video <$> field <*> field

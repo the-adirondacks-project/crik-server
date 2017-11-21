@@ -9,7 +9,7 @@ import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
 import Config (Config(..), ConfigM(..))
-import Routes (API)
+import API (API)
 import Routes.Video (videoServer)
 import Routes.VideoLibrary (videoLibraryServer)
 
