@@ -89,11 +89,13 @@ addResponseCode statusCode statusDescription subAPI fullAPI swagger =
 
 addAllVideoLibraryFilesResponses :: Swagger -> Swagger
 addAllVideoLibraryFilesResponses =
-  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy GetAllFilesInVideoLibrary) (Proxy :: Proxy API)
+  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy ("api" :> GetAllFilesInVideoLibrary))
+    (Proxy :: Proxy API)
 
 addNewVideoLibraryFilesResponses :: Swagger -> Swagger
 addNewVideoLibraryFilesResponses =
-  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy GetNewFilesInVideoLibrary) (Proxy :: Proxy API)
+  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy ("api" :> GetNewFilesInVideoLibrary))
+    (Proxy :: Proxy API)
 
 main :: IO ()
 main = do

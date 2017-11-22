@@ -17,7 +17,9 @@ import Types.Video (NoId, Video, VideoId)
 import Types.VideoFile (VideoFile, VideoFileId)
 import Types.VideoLibrary (VideoLibrary, VideoLibraryId)
 
-type API = VideoAPI :<|> VideoLibraryAPI
+type API = "api" :> (
+    VideoAPI :<|> VideoLibraryAPI
+  )
 
 type VideoAPI =
   GetVideos :<|>
