@@ -26,8 +26,8 @@ type VideoAPI =
   CreateVideo :<|>
   UpdateVideo :<|>
   GetVideo :<|>
-  CaptureVideoId :> GetFiles :<|>
-  CaptureVideoId :> GetFile :<|>
+  Videos :> CaptureVideoId :> GetFiles :<|>
+  Videos :> CaptureVideoId :> GetFile :<|>
   GetFiles :<|>
   GetFile
 
