@@ -1,0 +1,16 @@
+[Unit]
+Description=Crik Server
+After=syslog.target
+After=network.target
+
+[Service]
+User=crik
+Type=simple
+ExecStart=/usr/bin/stdbuf -oL /usr/bin/crik-server
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=crik
+
+[Install]
+WantedBy=multi-user.target
