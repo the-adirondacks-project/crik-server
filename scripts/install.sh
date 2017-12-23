@@ -13,7 +13,7 @@ stack install
 sudo cp ~/.local/bin/crik-server /usr/bin/
 
 # If this is a clean install make the crik user
-if [ ! id -u crik > /dev/null 2>&1 ]; then
+if [ ! `id -u crik 2>/dev/null || echo -1` -ge 0 ]; then
 # Add the `crik` user
 sudo adduser --system --no-create-home --group crik
 fi
