@@ -29,7 +29,8 @@ type VideoAPI =
   Videos :> CaptureVideoId :> GetFiles :<|>
   Videos :> CaptureVideoId :> GetFile :<|>
   GetFiles :<|>
-  GetFile
+  GetFile :<|>
+  CreateVideoFile
 
 type Videos = "videos"
 type CaptureVideoId = Capture "videoId" Int
@@ -42,8 +43,9 @@ type UpdateVideo = Videos :> CaptureVideoId :> ReqBody '[JSON] (Video NoId) :> P
 type Files = "files"
 type CaptureFileId = Capture "videoFileId" Int
 
-type GetFiles = Files :> Get '[JSON] [VideoFile]
-type GetFile = Files :> CaptureFileId :> Get '[JSON] VideoFile
+type GetFiles = Files :> Get '[JSON] [VideoFile VideoFileId]
+type GetFile = Files :> CaptureFileId :> Get '[JSON] (VideoFile VideoFileId)
+type CreateVideoFile = Files :> ReqBody '[JSON] (VideoFile NoId) :> Post '[JSON] (VideoFile VideoFileId)
 
 type VideoLibraryAPI =
   GetVideoLibraries :<|>

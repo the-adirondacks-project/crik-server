@@ -24,23 +24,29 @@ instance ToSchema VideoFileStorageId where declareNamedSchema = genericDeclareNa
 instance ToSchema VideoId where declareNamedSchema = genericDeclareNamedSchema myOptions
 instance ToSchema VideoLibraryId where declareNamedSchema = genericDeclareNamedSchema myOptions
 
-instance ToSchema VideoFile where
+instance ToSchema (VideoFile NoId) where
   declareNamedSchema _ = do
-    videoFileIdSchema <- declareSchemaRef (Proxy :: Proxy VideoFileId)
     videoIdSchema <- declareSchemaRef (Proxy :: Proxy VideoId)
     videoLibraryIdSchema <- declareSchemaRef (Proxy :: Proxy VideoLibraryId)
     videoFileStorageIdSchema <- declareSchemaRef (Proxy :: Proxy VideoFileStorageId)
     videoFileUrlSchema <- declareSchemaRef (Proxy :: Proxy Text)
-    return $ NamedSchema (Just "VideoFile") $ mempty
+    return $ NamedSchema (Just "NewVideoFile") $ mempty
       & type_ .~ SwaggerObject
       & properties .~ [
-        ("id", videoFileIdSchema)
-      , ("videoId", videoIdSchema)
+        ("videoId", videoIdSchema)
       , ("videoLibraryId", videoLibraryIdSchema)
       , ("videoFileStorageId", videoFileStorageIdSchema)
       , ("videoFileUrl", videoFileUrlSchema)
       ]
       & required .~ ["id", "videoId", "videoLibraryId", "videoFileStorageId", "videoFileUrl"]
+
+instance ToSchema (VideoFile VideoFileId) where
+  declareNamedSchema _ = do
+    idSchema <- declareSchemaRef (Proxy :: Proxy VideoFileId)
+    return $ NamedSchema (Just "VideoFile") $ toSchema (Proxy :: Proxy (VideoFile NoId))
+      & type_ .~ SwaggerObject
+      & properties %~ (union [("id", idSchema)])
+      & required %~ (++ ["id"])
 
 instance ToSchema (Video VideoId) where
   declareNamedSchema _ = do
