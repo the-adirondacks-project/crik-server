@@ -64,6 +64,14 @@ instance ToSchema (Video NoId) where
       & properties .~ [("name", nameSchema)]
       & required .~ ["name"]
 
+instance ToSchema (Video (Maybe VideoId)) where
+  declareNamedSchema _ = do
+    idSchema <- declareSchemaRef (Proxy :: Proxy VideoId)
+    nameSchema <- declareSchemaRef (Proxy :: Proxy Text)
+    return $ NamedSchema (Just "VideoOptionalId") $ mempty
+      & type_ .~ SwaggerObject
+      & properties .~ [("name", nameSchema), ("id", idSchema)]
+      & required .~ ["name"]
 
 instance ToSchema (VideoLibrary VideoLibraryId) where
   declareNamedSchema _ = do

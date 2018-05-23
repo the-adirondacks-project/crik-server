@@ -60,6 +60,13 @@ instance FromJSON (Video VideoId) where
     return (Video (VideoId id) name)
   parseJSON invalid = typeMismatch "Video" invalid
 
+instance FromJSON (Video (Maybe VideoId)) where
+  parseJSON (Object v) = do
+    id <- v .:? "id"
+    name <- v .: "name"
+    return (Video (VideoId <$> id) name)
+  parseJSON invalid = typeMismatch "Video" invalid
+
 instance FromJSON (Video NoId) where
   parseJSON (Object v) = do
     name <- v .: "name"

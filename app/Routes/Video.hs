@@ -21,7 +21,7 @@ import API (VideoAPI)
 import Config (Config(..), ConfigM(..))
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 import Database.VideoFile (getVideoFile, getVideoFiles, insertVideoFile)
-import Types.Video (NoId, Video, VideoId(VideoId))
+import Types.Video (NoId(..), Video(..), VideoId(VideoId))
 import Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
 
 videoServer :: ServerT VideoAPI ConfigM
@@ -44,10 +44,12 @@ getVideo videoId = do
     Nothing -> throwError err404
     Just x -> return x
 
-newVideoHandler :: Video NoId -> ConfigM (Video VideoId)
+fromMaybeId (Video _ videoName) = Video NoId videoName
+
+newVideoHandler :: Video (Maybe VideoId) -> ConfigM (Video VideoId)
 newVideoHandler newVideo = do
   connection <- asks psqlConnection
-  liftIO $ insertVideo connection newVideo
+  liftIO $ insertVideo connection (fromMaybeId newVideo)
 
 updateVideoHandler :: Int -> Video NoId -> ConfigM (Video VideoId)
 updateVideoHandler videoId videoUpdate = do

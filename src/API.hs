@@ -37,7 +37,7 @@ type CaptureVideoId = Capture "videoId" Int
 
 type GetVideos = Videos :> Get '[JSON] [Video VideoId]
 type GetVideo = Videos :> CaptureVideoId :> Get '[JSON] (Video VideoId)
-type CreateVideo = Videos :> ReqBody '[JSON] (Video NoId) :> Post '[JSON] (Video VideoId)
+type CreateVideo = Videos :> ReqBody '[JSON] (Video (Maybe VideoId)) :> Post '[JSON] (Video VideoId)
 type UpdateVideo = Videos :> CaptureVideoId :> ReqBody '[JSON] (Video NoId) :> Put '[JSON] (Video VideoId)
 
 type Files = "files"
