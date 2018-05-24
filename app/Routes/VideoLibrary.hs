@@ -9,7 +9,7 @@ import Control.Monad.Reader (asks)
 import Data.List ((\\))
 import Data.Text (Text, stripPrefix, pack, unpack)
 import Prelude hiding (FilePath)
-import Servant (ServerT, enter, err404, err422, err500, throwError)
+import Servant (ServerT, err404, err422, err500, throwError)
 import Servant.API ((:<|>)((:<|>)))
 import System.Directory (listDirectory)
 

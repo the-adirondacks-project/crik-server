@@ -14,7 +14,7 @@ module Routes.Video
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
-import Servant (ServerT, enter, err404, throwError)
+import Servant (ServerT, err404, throwError)
 import Servant.API (Capture, Get, JSON, Post, Put, ReqBody, (:>), (:<|>)((:<|>)))
 
 import API (VideoAPI)

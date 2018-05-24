@@ -4,7 +4,7 @@ import Database.PostgreSQL.Simple (connectPostgreSQL)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Servant (Handler, Server, (:<|>)(..), (:~>)(NT), enter, serve)
+import Servant (Handler, Server, (:<|>)(..), hoistServer, serve)
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
@@ -36,10 +36,9 @@ api :: Proxy API
 api = Proxy
 
 server :: Config -> Server API
-server config = enter (makeHandler config) $ videoServer :<|> videoLibraryServer
+server config = hoistServer api (makeHandler config) (videoServer :<|> videoLibraryServer)
 
-makeHandler :: Config -> ConfigM :~> Handler
-makeHandler config = NT (\m -> runReaderT (runConfigM m) config)
+makeHandler config x = runReaderT (runConfigM x) config
 
 app :: Config -> Application
 app config = serve api (server config)
