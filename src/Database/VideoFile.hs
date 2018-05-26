@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RecordWildCards #-}
+
 module Database.VideoFile
 (
   getVideoFile
@@ -13,9 +16,10 @@ import Database.PostgreSQL.Simple.Types (Query(Query))
 import Prelude hiding (concat)
 
 import Database.Error (DatabaseException(..))
-import Types (NoId)
-import Types.Video (VideoId)
-import Types.VideoFile (VideoFileId, VideoFile)
+import Crik.Types
+import Crik.Types.Video
+import Crik.Types.VideoFile
+import Database.Instance
 
 getVideoFiles :: Connection -> Maybe VideoId -> Maybe VideoFileId -> IO ([VideoFile VideoFileId])
 getVideoFiles connection Nothing Nothing = do

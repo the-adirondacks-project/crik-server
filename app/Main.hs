@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeOperators #-}
+
 import Control.Monad.Reader (runReaderT)
 import Data.Proxy (Proxy(..))
 import Database.PostgreSQL.Simple (connectPostgreSQL)
@@ -5,13 +7,25 @@ import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (Handler, Server, (:<|>)(..), hoistServer, serve)
+import Servant.API (FromHttpApiData(..))
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
 import Config (Config(..), ConfigM(..))
-import API (API)
+import Crik.API
+import Crik.Types.Video
+import Crik.Types.VideoLibrary
 import Routes.Video (videoServer)
 import Routes.VideoLibrary (videoLibraryServer)
+
+-- TODO: Move this somewhere else
+instance FromHttpApiData VideoId where
+  parseUrlPiece text = parseUrlPiece text >>= (return . VideoId)
+  parseQueryParam text = parseQueryParam text >>= (return . VideoId)
+
+instance FromHttpApiData VideoLibraryId where
+  parseUrlPiece text = parseUrlPiece text >>= (return . VideoLibraryId)
+  parseQueryParam text = parseQueryParam text >>= (return . VideoLibraryId)
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
@@ -32,10 +46,12 @@ getConfig = do
   psqlConnection <- connectPostgreSQL ""
   return $ Config psqlConnection
 
-api :: Proxy API
+type TempAPI = VideoAPI :<|> LibraryAPI
+
+api :: Proxy TempAPI
 api = Proxy
 
-server :: Config -> Server API
+server :: Config -> Server TempAPI
 server config = hoistServer api (makeHandler config) (videoServer :<|> videoLibraryServer)
 
 makeHandler config x = runReaderT (runConfigM x) config

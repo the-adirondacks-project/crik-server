@@ -11,8 +11,9 @@ import Data.Maybe (listToMaybe)
 import Database.PostgreSQL.Simple (Connection, Only(Only), query, query_)
 
 import Database.Error (DatabaseException(..))
-import Types (NoId)
-import Types.VideoLibrary (VideoLibraryId, VideoLibrary(..))
+import Crik.Types (NoId)
+import Crik.Types.VideoLibrary (VideoLibraryId, VideoLibrary(..))
+import Database.Instance
 
 getAllVideoLibraries :: Connection -> IO ([VideoLibrary VideoLibraryId])
 getAllVideoLibraries connection = do

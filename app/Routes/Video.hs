@@ -17,44 +17,41 @@ import Control.Monad.Reader (asks)
 import Servant (ServerT, err404, throwError)
 import Servant.API (Capture, Get, JSON, Post, Put, ReqBody, (:>), (:<|>)((:<|>)))
 
-import API (VideoAPI)
+import Crik.API (VideoAPI)
 import Config (Config(..), ConfigM(..))
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
 import Database.VideoFile (getVideoFile, getVideoFiles, insertVideoFile)
-import Types.Video (NoId(..), Video(..), VideoId(VideoId))
-import Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
+import Crik.Types
+import Crik.Types.Video (Video(..), VideoId(VideoId))
+import Crik.Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
 
 videoServer :: ServerT VideoAPI ConfigM
 videoServer =
+  getVideo :<|>
   getVideos :<|>
   newVideoHandler :<|>
   updateVideoHandler :<|>
-  getVideo :<|>
-  getVideoFilesForVideoHandler :<|>
-  getVideoFileForVideoHandler :<|>
-  getVideoFilesHandler :<|>
-  getVideoFileHandler :<|>
-  createVideoFileHandler
+  getVideoFilesForVideoHandler
 
-getVideo :: Int -> ConfigM (Video VideoId)
+getVideo :: VideoId -> ConfigM (Video VideoId)
 getVideo videoId = do
   connection <- asks psqlConnection
-  maybeVideo <- liftIO $ getVideoById connection (VideoId videoId)
+  maybeVideo <- liftIO $ getVideoById connection videoId
   case maybeVideo of
     Nothing -> throwError err404
     Just x -> return x
 
 fromMaybeId (Video _ videoName) = Video NoId videoName
 
-newVideoHandler :: Video (Maybe VideoId) -> ConfigM (Video VideoId)
+newVideoHandler :: Video (NoId) -> ConfigM (Video VideoId)
 newVideoHandler newVideo = do
   connection <- asks psqlConnection
   liftIO $ insertVideo connection (fromMaybeId newVideo)
 
-updateVideoHandler :: Int -> Video NoId -> ConfigM (Video VideoId)
+updateVideoHandler :: VideoId -> Video (Maybe VideoId) -> ConfigM (Video VideoId)
 updateVideoHandler videoId videoUpdate = do
   connection <- asks psqlConnection
-  maybeUpdatedVideo <- liftIO $ updateVideo connection (VideoId videoId) videoUpdate
+  maybeUpdatedVideo <- liftIO $ updateVideo connection videoId videoUpdate
   case maybeUpdatedVideo of
     Nothing -> throwError err404
     Just x -> return x
@@ -77,10 +74,10 @@ getVideoFileHandler videoFileId = do
     Nothing -> throwError err404
     Just x -> return x
 
-getVideoFilesForVideoHandler :: Int -> ConfigM [VideoFile VideoFileId]
+getVideoFilesForVideoHandler :: VideoId -> ConfigM [VideoFile VideoFileId]
 getVideoFilesForVideoHandler videoId = do
   connection <- asks psqlConnection
-  liftIO $ getVideoFiles connection (Just (VideoId videoId)) Nothing
+  liftIO $ getVideoFiles connection (Just videoId) Nothing
 
 getVideoFileForVideoHandler :: Int -> Int -> ConfigM (VideoFile VideoFileId)
 getVideoFileForVideoHandler videoId videoFileId = do

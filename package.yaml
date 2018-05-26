@@ -13,17 +13,14 @@ library:
   default-extensions:
   - OverloadedStrings
   exposed-modules:
-  - API
   - Database.Error
+  - Database.Instance
   - Database.Video
   - Database.VideoFile
   - Database.VideoLibrary
-  - Types
-  - Types.Video
-  - Types.VideoFile
-  - Types.VideoLibrary
   dependencies:
   - aeson
+  - crik-types
   - base >=4.7 && <5
   - bytestring
   - postgresql-simple
@@ -67,6 +64,7 @@ executables:
     - aeson
     - bytestring
     - base
+    - crik-types
     - directory
     - lens
     - mtl
