@@ -3,19 +3,21 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-import Data.HashMap.Strict.InsOrd
-import Types.Video
-import Types.VideoLibrary
-import Types.VideoFile
-import qualified Data.ByteString.Lazy.Char8 as BL8
 import Control.Lens
-import Data.Text (Text)
-import Servant.Swagger
-import Servant.API
-import Data.Swagger
-import Data.Proxy (Proxy(..))
-import API
 import Data.Aeson.Encode.Pretty
+import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.HashMap.Strict.InsOrd
+import Data.Proxy (Proxy(..))
+import Data.Swagger
+import Data.Text (Text)
+import Servant.API
+import Servant.Swagger
+
+import Crik.API
+import Crik.Types
+import Crik.Types.Video
+import Crik.Types.VideoFile
+import Crik.Types.VideoLibrary
 
 myOptions = defaultSchemaOptions{unwrapUnaryRecords=True}
 
@@ -90,12 +92,11 @@ instance ToSchema (VideoLibrary NoId) where
       & required .~ ["videoLibraryUrl"]
 
 instance ToParamSchema VideoId
+instance ToParamSchema VideoFileId
 instance ToParamSchema VideoLibraryId
 
---newFiles = subOperations (Proxy :: Proxy ("video_libraries" :> NewFiles)) (Proxy :: Proxy VideoLibraryAPI)
-
 apiSwagger :: Swagger
-apiSwagger = toSwagger (Proxy :: Proxy API)
+apiSwagger = toSwagger (Proxy :: Proxy CrikAPI)
 
 addResponseCode statusCode statusDescription subAPI fullAPI swagger =
   setResponseFor (subOperations subAPI fullAPI) statusCode (return responseSchema) swagger
@@ -103,15 +104,15 @@ addResponseCode statusCode statusDescription subAPI fullAPI swagger =
 
 addAllVideoLibraryFilesResponses :: Swagger -> Swagger
 addAllVideoLibraryFilesResponses =
-  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy ("api" :> GetAllFilesInVideoLibrary))
-    (Proxy :: Proxy API)
+  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy GetAllFilesInVideoLibrary)
+    (Proxy :: Proxy CrikAPI)
 
 addNewVideoLibraryFilesResponses :: Swagger -> Swagger
 addNewVideoLibraryFilesResponses =
-  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy ("api" :> GetNewFilesInVideoLibrary))
-    (Proxy :: Proxy API)
+  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy GetNewFilesInVideoLibrary)
+    (Proxy :: Proxy CrikAPI)
 
 main :: IO ()
 main = do
-  let swagger = (addAllVideoLibraryFilesResponses . addNewVideoLibraryFilesResponses) apiSwagger
+  let swagger = (addNewVideoLibraryFilesResponses . addAllVideoLibraryFilesResponses) apiSwagger
   BL8.writeFile "swagger.json" $ encodePretty swagger

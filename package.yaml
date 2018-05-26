@@ -45,13 +45,13 @@ executables:
     - aeson
     - aeson-pretty
     - bytestring
+    - crik-types
     - base
     - insert-ordered-containers
     - lens
     - servant
     - servant-swagger
     - swagger2
-    - crik-server
     - text
   crik-server:
     main: Main.hs
