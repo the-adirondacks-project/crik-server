@@ -2,10 +2,7 @@ module Routes.Video
 (
   VideoAPI
 , getVideo
-, getVideoFileForVideoHandler
-, getVideoFileHandler
 , getVideoFilesForVideoHandler
-, getVideoFilesHandler
 , getVideos
 , newVideoHandler
 , updateVideoHandler
@@ -61,33 +58,7 @@ getVideos = do
   connection <- asks psqlConnection
   liftIO $ getAllVideos connection
 
-getVideoFilesHandler :: ConfigM [VideoFile VideoFileId]
-getVideoFilesHandler = do
-  connection <- asks psqlConnection
-  liftIO $ getVideoFiles connection Nothing Nothing
-
-getVideoFileHandler :: Int -> ConfigM (VideoFile VideoFileId)
-getVideoFileHandler videoFileId = do
-  connection <- asks psqlConnection
-  maybeVideoFile <- liftIO $ getVideoFile connection Nothing (VideoFileId videoFileId)
-  case maybeVideoFile of
-    Nothing -> throwError err404
-    Just x -> return x
-
 getVideoFilesForVideoHandler :: VideoId -> ConfigM [VideoFile VideoFileId]
 getVideoFilesForVideoHandler videoId = do
   connection <- asks psqlConnection
   liftIO $ getVideoFiles connection (Just videoId) Nothing
-
-getVideoFileForVideoHandler :: Int -> Int -> ConfigM (VideoFile VideoFileId)
-getVideoFileForVideoHandler videoId videoFileId = do
-  connection <- asks psqlConnection
-  maybeVideoFile <- liftIO $ getVideoFile connection (Just (VideoId videoId)) (VideoFileId videoFileId)
-  case maybeVideoFile of
-    Nothing -> throwError err404
-    Just x -> return x
-
-createVideoFileHandler :: VideoFile NoId -> ConfigM (VideoFile VideoFileId)
-createVideoFileHandler newVideoFile = do
-  connection <- asks psqlConnection
-  liftIO $ insertVideoFile connection newVideoFile

@@ -14,7 +14,9 @@ import Text.Read (readMaybe)
 import Config (Config(..), ConfigM(..))
 import Crik.API
 import Crik.Types.Video
+import Crik.Types.VideoFile
 import Crik.Types.VideoLibrary
+import Routes.File (fileServer)
 import Routes.Video (videoServer)
 import Routes.VideoLibrary (videoLibraryServer)
 
@@ -26,6 +28,10 @@ instance FromHttpApiData VideoId where
 instance FromHttpApiData VideoLibraryId where
   parseUrlPiece text = parseUrlPiece text >>= (return . VideoLibraryId)
   parseQueryParam text = parseQueryParam text >>= (return . VideoLibraryId)
+
+instance FromHttpApiData VideoFileId where
+  parseUrlPiece text = parseUrlPiece text >>= (return . VideoFileId)
+  parseQueryParam text = parseQueryParam text >>= (return . VideoFileId)
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
@@ -46,13 +52,12 @@ getConfig = do
   psqlConnection <- connectPostgreSQL ""
   return $ Config psqlConnection
 
-type TempAPI = VideoAPI :<|> LibraryAPI
-
-api :: Proxy TempAPI
+api :: Proxy CrikAPI
 api = Proxy
 
-server :: Config -> Server TempAPI
-server config = hoistServer api (makeHandler config) (videoServer :<|> videoLibraryServer)
+server :: Config -> Server CrikAPI
+server config = hoistServer api (makeHandler config)
+  (videoServer :<|> fileServer :<|> videoLibraryServer)
 
 makeHandler config x = runReaderT (runConfigM x) config
 
