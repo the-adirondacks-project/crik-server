@@ -20,19 +20,6 @@ import Routes.File (fileServer)
 import Routes.Video (videoServer)
 import Routes.VideoLibrary (videoLibraryServer)
 
--- TODO: Move this somewhere else
-instance FromHttpApiData VideoId where
-  parseUrlPiece text = parseUrlPiece text >>= (return . VideoId)
-  parseQueryParam text = parseQueryParam text >>= (return . VideoId)
-
-instance FromHttpApiData VideoLibraryId where
-  parseUrlPiece text = parseUrlPiece text >>= (return . VideoLibraryId)
-  parseQueryParam text = parseQueryParam text >>= (return . VideoLibraryId)
-
-instance FromHttpApiData VideoFileId where
-  parseUrlPiece text = parseUrlPiece text >>= (return . VideoFileId)
-  parseQueryParam text = parseQueryParam text >>= (return . VideoFileId)
-
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
   maybeRawPort <- lookupEnv "PORT"
