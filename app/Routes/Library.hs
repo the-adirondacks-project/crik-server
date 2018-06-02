@@ -1,4 +1,4 @@
-module Routes.VideoLibrary
+module Routes.Library
 (
   LibraryAPI
 , libraryServer

@@ -18,7 +18,7 @@ import Crik.Types.File
 import Crik.Types.Library
 import Routes.File (fileServer)
 import Routes.Video (videoServer)
-import Routes.VideoLibrary
+import Routes.Library
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
