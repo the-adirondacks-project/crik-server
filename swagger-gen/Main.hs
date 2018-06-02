@@ -16,36 +16,36 @@ import Servant.Swagger
 import Crik.API
 import Crik.Types
 import Crik.Types.Video
-import Crik.Types.VideoFile
-import Crik.Types.VideoLibrary
+import Crik.Types.File
+import Crik.Types.Library
 
 myOptions = defaultSchemaOptions{unwrapUnaryRecords=True}
 
-instance ToSchema VideoFileId where declareNamedSchema = genericDeclareNamedSchema myOptions
-instance ToSchema VideoFileStorageId where declareNamedSchema = genericDeclareNamedSchema myOptions
+instance ToSchema FileId where declareNamedSchema = genericDeclareNamedSchema myOptions
+instance ToSchema FileStorageId where declareNamedSchema = genericDeclareNamedSchema myOptions
 instance ToSchema VideoId where declareNamedSchema = genericDeclareNamedSchema myOptions
-instance ToSchema VideoLibraryId where declareNamedSchema = genericDeclareNamedSchema myOptions
+instance ToSchema LibraryId where declareNamedSchema = genericDeclareNamedSchema myOptions
 
-instance ToSchema (VideoFile NoId) where
+instance ToSchema (File NoId) where
   declareNamedSchema _ = do
     videoIdSchema <- declareSchemaRef (Proxy :: Proxy VideoId)
-    videoLibraryIdSchema <- declareSchemaRef (Proxy :: Proxy VideoLibraryId)
-    videoFileStorageIdSchema <- declareSchemaRef (Proxy :: Proxy VideoFileStorageId)
+    videoLibraryIdSchema <- declareSchemaRef (Proxy :: Proxy LibraryId)
+    videoFileStorageIdSchema <- declareSchemaRef (Proxy :: Proxy FileStorageId)
     videoFileUrlSchema <- declareSchemaRef (Proxy :: Proxy Text)
     return $ NamedSchema (Just "NewVideoFile") $ mempty
       & type_ .~ SwaggerObject
       & properties .~ [
         ("videoId", videoIdSchema)
-      , ("videoLibraryId", videoLibraryIdSchema)
-      , ("videoFileStorageId", videoFileStorageIdSchema)
+      , ("libraryId", videoLibraryIdSchema)
+      , ("fileStorageId", videoFileStorageIdSchema)
       , ("videoFileUrl", videoFileUrlSchema)
       ]
-      & required .~ ["id", "videoId", "videoLibraryId", "videoFileStorageId", "videoFileUrl"]
+      & required .~ ["id", "videoId", "libraryId", "fileStorageId", "videoFileUrl"]
 
-instance ToSchema (VideoFile VideoFileId) where
+instance ToSchema (File FileId) where
   declareNamedSchema _ = do
-    idSchema <- declareSchemaRef (Proxy :: Proxy VideoFileId)
-    return $ NamedSchema (Just "VideoFile") $ toSchema (Proxy :: Proxy (VideoFile NoId))
+    idSchema <- declareSchemaRef (Proxy :: Proxy FileId)
+    return $ NamedSchema (Just "File") $ toSchema (Proxy :: Proxy (File NoId))
       & type_ .~ SwaggerObject
       & properties %~ (union [("id", idSchema)])
       & required %~ (++ ["id"])
@@ -75,15 +75,15 @@ instance ToSchema (Video (Maybe VideoId)) where
       & properties .~ [("name", nameSchema), ("id", idSchema)]
       & required .~ ["name"]
 
-instance ToSchema (VideoLibrary VideoLibraryId) where
+instance ToSchema (Library LibraryId) where
   declareNamedSchema _ = do
-    videoLibraryIdSchema <- declareSchemaRef (Proxy :: Proxy VideoLibraryId)
-    return $ NamedSchema (Just "VideoLibrary") $ toSchema (Proxy :: Proxy (VideoLibrary NoId))
+    videoLibraryIdSchema <- declareSchemaRef (Proxy :: Proxy LibraryId)
+    return $ NamedSchema (Just "Library") $ toSchema (Proxy :: Proxy (Library NoId))
       & type_ .~ SwaggerObject
       & properties %~ (union [("id", videoLibraryIdSchema)])
       & required %~ (++ ["id"])
 
-instance ToSchema (VideoLibrary NoId) where
+instance ToSchema (Library NoId) where
   declareNamedSchema _ = do
     videoLibraryUrlSchema <- declareSchemaRef (Proxy :: Proxy Text)
     return $ NamedSchema (Just "NewVideoLibrary") $ mempty
@@ -92,8 +92,8 @@ instance ToSchema (VideoLibrary NoId) where
       & required .~ ["videoLibraryUrl"]
 
 instance ToParamSchema VideoId
-instance ToParamSchema VideoFileId
-instance ToParamSchema VideoLibraryId
+instance ToParamSchema FileId
+instance ToParamSchema LibraryId
 
 apiSwagger :: Swagger
 apiSwagger = toSwagger (Proxy :: Proxy CrikAPI)

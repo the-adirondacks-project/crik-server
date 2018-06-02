@@ -11,8 +11,8 @@ import Database.PostgreSQL.Simple.Types (Query(Query))
 
 import Crik.Types
 import Crik.Types.Video
-import Crik.Types.VideoFile
-import Crik.Types.VideoLibrary
+import Crik.Types.File
+import Crik.Types.Library
 
 -- Videos
 instance FromField VideoId where
@@ -33,56 +33,56 @@ instance ToRow (Video NoId) where
   toRow Video{..} = [toField videoName]
 
 -- Video Files
-instance FromField VideoFileId where
+instance FromField FileId where
   fromField field rawData = do
     videoFileId <- fromField field rawData
-    return $ VideoFileId videoFileId
+    return $ FileId videoFileId
 
-instance ToField VideoFileId where
-  toField VideoFileId{..} = toField unVideoFileId
+instance ToField FileId where
+  toField FileId{..} = toField unFileId
 
-instance FromField VideoFileStorageId where
+instance FromField FileStorageId where
   fromField field rawData = do
     videoFileStorageId <- fromField field rawData
-    return $ VideoFileStorageId videoFileStorageId
+    return $ FileStorageId videoFileStorageId
 
-instance ToField VideoFileStorageId where
-  toField VideoFileStorageId{..} = toField unVideoFileStorageId
+instance ToField FileStorageId where
+  toField FileStorageId{..} = toField unFileStorageId
 
-instance FromField id => FromRow (VideoFile id) where
-  fromRow = VideoFile <$> field <*> field <*> field <*> field <*> field
+instance FromField id => FromRow (File id) where
+  fromRow = File <$> field <*> field <*> field <*> field <*> field
 
-instance ToRow (VideoFile VideoFileId) where
-  toRow VideoFile{..} = [
-      toField videoFileId,
+instance ToRow (File FileId) where
+  toRow File{..} = [
+      toField fileId,
       toField videoId,
-      toField videoFileUrl,
-      toField videoLibraryId,
-      toField videoFileStorageId
+      toField fileUrl,
+      toField libraryId,
+      toField fileStorageId
     ]
 
-instance ToRow (VideoFile NoId) where
-  toRow VideoFile{..} = [
+instance ToRow (File NoId) where
+  toRow File{..} = [
       toField videoId,
-      toField videoFileUrl,
-      toField videoLibraryId,
-      toField videoFileStorageId
+      toField fileUrl,
+      toField libraryId,
+      toField fileStorageId
     ]
 
 -- Video Libraries
-instance FromField VideoLibraryId where
+instance FromField LibraryId where
   fromField field rawData = do
     videoLibraryId <- fromField field rawData
-    return $ VideoLibraryId videoLibraryId
+    return $ LibraryId videoLibraryId
 
-instance ToField VideoLibraryId where
-  toField VideoLibraryId{..} = toField unVideoLibraryId
+instance ToField LibraryId where
+  toField LibraryId{..} = toField unVideoLibraryId
 
-instance (FromField t) => FromRow (VideoLibrary t) where
-  fromRow = VideoLibrary <$> field <*> field
+instance (FromField t) => FromRow (Library t) where
+  fromRow = Library <$> field <*> field
 
-instance ToRow (VideoLibrary NoId) where
-  toRow VideoLibrary{..} = [toField videoLibraryUrl]
+instance ToRow (Library NoId) where
+  toRow Library{..} = [toField libraryUrl]
 
-instance ToRow (VideoLibrary VideoLibraryId) where
-  toRow VideoLibrary{..} = [toField videoLibraryId, toField videoLibraryUrl]
+instance ToRow (Library LibraryId) where
+  toRow Library{..} = [toField libraryId, toField libraryUrl]
