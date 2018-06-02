@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RecordWildCards #-}
+
 module Database.Video
 (
   getAllVideos
@@ -12,8 +15,9 @@ import Data.Text (Text)
 import Database.PostgreSQL.Simple (Connection, Only(Only), query, query_)
 
 import Database.Error (DatabaseException(..))
-import Types (NoId)
-import Types.Video (VideoId, Video(videoName))
+import Crik.Types
+import Crik.Types.Video
+import Database.Instance
 
 getAllVideos :: Connection -> IO ([Video VideoId])
 getAllVideos connection = do
@@ -33,7 +37,7 @@ insertVideo connection videoPost = do
     [x] -> return x
     _ -> throw $ InsertReturnedMultiple "insertVideo returned multiple rows when it should have returned just one"
 
-updateVideo :: Connection -> VideoId -> Video NoId -> IO (Maybe (Video VideoId))
+updateVideo :: Connection -> VideoId -> Video (Maybe VideoId) -> IO (Maybe (Video VideoId))
 updateVideo connection videoId videoPost = do
   rows <- query connection "update videos set name = ? where id = ? returning id, name" (videoName videoPost, videoId)
   case rows of
