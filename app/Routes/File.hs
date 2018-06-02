@@ -11,9 +11,8 @@ import Servant.API ((:<|>)((:<|>)))
 import Config
 import Crik.API
 import Crik.Types
-import Crik.Types.Video
-import Crik.Types.VideoFile
-import Database.VideoFile
+import Crik.Types.File
+import Database.File
 
 fileServer :: ServerT FileAPI ConfigM
 fileServer =
@@ -21,20 +20,20 @@ fileServer =
   getFilesHandler :<|>
   createFileHandler
 
-getFileHandler :: VideoFileId -> ConfigM (VideoFile VideoFileId)
+getFileHandler :: FileId -> ConfigM (File FileId)
 getFileHandler fileId = do
   connection <- asks psqlConnection
-  maybeVideoFile <- liftIO $ getVideoFile connection Nothing fileId
-  case maybeVideoFile of
+  maybeFile <- liftIO $ getFile connection Nothing fileId
+  case maybeFile of
     Nothing -> throwError err404
     Just x -> return x
 
-getFilesHandler :: ConfigM [VideoFile VideoFileId]
+getFilesHandler :: ConfigM [File FileId]
 getFilesHandler = do
   connection <- asks psqlConnection
-  liftIO $ getVideoFiles connection Nothing Nothing
+  liftIO $ getFiles connection Nothing Nothing
 
-createFileHandler :: VideoFile NoId -> ConfigM (VideoFile VideoFileId)
-createFileHandler newVideoFile = do
+createFileHandler :: File NoId -> ConfigM (File FileId)
+createFileHandler newFile = do
   connection <- asks psqlConnection
-  liftIO $ insertVideoFile connection newVideoFile
+  liftIO $ insertFile connection newFile

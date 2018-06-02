@@ -2,7 +2,7 @@ module Routes.Video
 (
   VideoAPI
 , getVideo
-, getVideoFilesForVideoHandler
+, getFilesForVideoHandler
 , getVideos
 , newVideoHandler
 , updateVideoHandler
@@ -17,10 +17,10 @@ import Servant.API (Capture, Get, JSON, Post, Put, ReqBody, (:>), (:<|>)((:<|>))
 import Crik.API (VideoAPI)
 import Config (Config(..), ConfigM(..))
 import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
-import Database.VideoFile (getVideoFile, getVideoFiles, insertVideoFile)
+import Database.File
 import Crik.Types
 import Crik.Types.Video (Video(..), VideoId(VideoId))
-import Crik.Types.VideoFile (VideoFile, VideoFileId(VideoFileId))
+import Crik.Types.File
 
 videoServer :: ServerT VideoAPI ConfigM
 videoServer =
@@ -28,7 +28,7 @@ videoServer =
   getVideos :<|>
   newVideoHandler :<|>
   updateVideoHandler :<|>
-  getVideoFilesForVideoHandler
+  getFilesForVideoHandler
 
 getVideo :: VideoId -> ConfigM (Video VideoId)
 getVideo videoId = do
@@ -58,7 +58,7 @@ getVideos = do
   connection <- asks psqlConnection
   liftIO $ getAllVideos connection
 
-getVideoFilesForVideoHandler :: VideoId -> ConfigM [VideoFile VideoFileId]
-getVideoFilesForVideoHandler videoId = do
+getFilesForVideoHandler :: VideoId -> ConfigM [File FileId]
+getFilesForVideoHandler videoId = do
   connection <- asks psqlConnection
-  liftIO $ getVideoFiles connection (Just videoId) Nothing
+  liftIO $ getFiles connection (Just videoId) Nothing

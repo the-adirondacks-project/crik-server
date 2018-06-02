@@ -16,8 +16,8 @@ library:
   - Database.Error
   - Database.Instance
   - Database.Video
-  - Database.VideoFile
-  - Database.VideoLibrary
+  - Database.File
+  - Database.Library
   dependencies:
   - aeson
   - crik-types

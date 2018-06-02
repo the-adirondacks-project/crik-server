@@ -1,9 +1,9 @@
-module Database.VideoLibrary
+module Database.Library
 (
-  getAllVideoLibraries
-, getVideoLibraryById
-, insertVideoLibrary
-, updateVideoLibrary
+  getAllLibraries
+, getLibraryById
+, insertLibrary
+, updateLibrary
 ) where
 
 import Control.Exception (throw)
@@ -12,35 +12,35 @@ import Database.PostgreSQL.Simple (Connection, Only(Only), query, query_)
 
 import Database.Error (DatabaseException(..))
 import Crik.Types (NoId)
-import Crik.Types.VideoLibrary (VideoLibraryId, VideoLibrary(..))
+import Crik.Types.Library
 import Database.Instance
 
-getAllVideoLibraries :: Connection -> IO ([VideoLibrary VideoLibraryId])
-getAllVideoLibraries connection = do
+getAllLibraries :: Connection -> IO ([Library LibraryId])
+getAllLibraries connection = do
   rows <- query_ connection "select * from video_libraries"
   return (rows)
 
-getVideoLibraryById :: Connection -> VideoLibraryId -> IO (Maybe (VideoLibrary VideoLibraryId))
-getVideoLibraryById connection videoLibraryId = do
-  rows <- query connection "select * from video_libraries where id = ?" (Only videoLibraryId)
+getLibraryById :: Connection -> LibraryId -> IO (Maybe (Library LibraryId))
+getLibraryById connection libraryId = do
+  rows <- query connection "select * from video_libraries where id = ?" (Only libraryId)
   return (listToMaybe rows)
 
-insertVideoLibrary :: Connection -> VideoLibrary NoId -> IO (VideoLibrary VideoLibraryId)
-insertVideoLibrary connection videoLibraryPost = do
-  rows <- query connection "insert into video_libraries (url) values (?) returning id, url" videoLibraryPost
+insertLibrary :: Connection -> Library NoId -> IO (Library LibraryId)
+insertLibrary connection libraryPost = do
+  rows <- query connection "insert into video_libraries (url) values (?) returning id, url" libraryPost
   case rows of
     [] -> throw $ InsertReturnedNothing
-      "insertVideoLibrary returned nothing when it should have returned the inserted videoLibrary"
+      "insertLibrary returned nothing when it should have returned the inserted Library"
     [x] -> return x
     _ -> throw $ InsertReturnedMultiple
-      "insertVideoLibrary returned multiple rows when it should have returned just one"
+      "insertLibrary returned multiple rows when it should have returned just one"
 
-updateVideoLibrary :: Connection -> VideoLibraryId -> VideoLibrary NoId -> IO (Maybe (VideoLibrary VideoLibraryId))
-updateVideoLibrary connection videoLibraryId videoLibraryPost = do
+updateLibrary :: Connection -> LibraryId -> Library NoId -> IO (Maybe (Library LibraryId))
+updateLibrary connection libraryId libraryPost = do
   rows <- query connection "update video_libraries set url = ? where id = ? returning id, url"
-    (videoLibraryUrl videoLibraryPost, videoLibraryId)
+    (libraryUrl libraryPost, libraryId)
   case rows of
     [] -> return Nothing
     [x] -> return $ Just x
     _ -> throw $ InsertReturnedMultiple
-      "updateVideoLibrary returned multiple rows when it should have returned just one"
+      "updateLibrary returned multiple rows when it should have returned just one"

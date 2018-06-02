@@ -1,11 +1,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Database.VideoFile
+module Database.File
 (
-  getVideoFile
-, getVideoFiles
-, insertVideoFile
+  getFile
+, getFiles
+, insertFile
 ) where
 
 import Control.Exception (throw)
@@ -18,40 +18,40 @@ import Prelude hiding (concat)
 import Database.Error (DatabaseException(..))
 import Crik.Types
 import Crik.Types.Video
-import Crik.Types.VideoFile
+import Crik.Types.File
 import Database.Instance
 
-getVideoFiles :: Connection -> Maybe VideoId -> Maybe VideoFileId -> IO ([VideoFile VideoFileId])
-getVideoFiles connection Nothing Nothing = do
+getFiles :: Connection -> Maybe VideoId -> Maybe FileId -> IO ([File FileId])
+getFiles connection Nothing Nothing = do
   rows <- query_ connection (Query $ concat ["select ", allColumns, " from video_files"])
   return (rows)
-getVideoFiles connection (Just videoId) Nothing = do
+getFiles connection (Just videoId) Nothing = do
   rows <- query connection (Query $ concat ["select ", allColumns, " from video_files where video_id = ?"])
     (Only videoId)
   return (rows)
-getVideoFiles connection Nothing (Just videoFileId) = do
-  rows <- query connection (Query $ concat ["select ", allColumns, " from video_files where id = ?"]) (Only videoFileId)
+getFiles connection Nothing (Just fileId) = do
+  rows <- query connection (Query $ concat ["select ", allColumns, " from video_files where id = ?"]) (Only fileId)
   return (rows)
-getVideoFiles connection (Just videoId) (Just videoFileId) = do
+getFiles connection (Just videoId) (Just fileId) = do
   rows <- query connection (Query $ concat ["select ", allColumns, " from video_files where video_id = ? and id = ?"])
-    (videoId, videoFileId)
+    (videoId, fileId)
   return (rows)
 
-getVideoFile :: Connection -> Maybe VideoId -> VideoFileId -> IO (Maybe (VideoFile VideoFileId))
-getVideoFile connection maybeVideoId videoFileId = do
-  rows <- getVideoFiles connection maybeVideoId (Just videoFileId)
+getFile :: Connection -> Maybe VideoId -> FileId -> IO (Maybe (File FileId))
+getFile connection maybeVideoId fileId = do
+  rows <- getFiles connection maybeVideoId (Just fileId)
   return (listToMaybe rows)
 
-insertVideoFile :: Connection -> VideoFile NoId -> IO (VideoFile VideoFileId)
-insertVideoFile connection videoFilePost = do
+insertFile :: Connection -> File NoId -> IO (File FileId)
+insertFile connection filePost = do
   rows <- query connection
     (Query $ concat ["insert into video_files (", insertColumns, ") values (?, ?, ?, ?) returning ", allColumns])
-    videoFilePost
+    filePost
   case rows of
     [] -> throw $ InsertReturnedNothing
-      "insertVideoFile returned nothing when it should have returned the inserted video"
+      "insertFile returned nothing when it should have returned the inserted video"
     [x] -> return x
-    _ -> throw $ InsertReturnedMultiple "insertVideoFile returned multiple rows when it should have returned just one"
+    _ -> throw $ InsertReturnedMultiple "insertFile returned multiple rows when it should have returned just one"
 
 allColumns :: ByteString
 allColumns = concat ["id, ", insertColumns]

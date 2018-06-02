@@ -1,7 +1,7 @@
 module Routes.VideoLibrary
 (
   LibraryAPI
-, videoLibraryServer
+, libraryServer
 ) where
 
 import Control.Monad.IO.Class (liftIO)
@@ -15,72 +15,72 @@ import System.Directory (listDirectory)
 
 import Crik.API
 import Config (Config(..), ConfigM(..))
-import Database.VideoLibrary (getAllVideoLibraries, getVideoLibraryById, insertVideoLibrary, updateVideoLibrary)
-import Database.VideoFile (getVideoFiles)
+import Database.Library
+import Database.File
 import Crik.Types (NoId(NoId))
-import Crik.Types.VideoLibrary (VideoLibrary(..), VideoLibraryId(VideoLibraryId))
-import Crik.Types.VideoFile (VideoFile(videoFileStorageId), VideoFileStorageId(unVideoFileStorageId))
+import Crik.Types.Library
+import Crik.Types.File
 
-videoLibraryServer :: ServerT LibraryAPI ConfigM
-videoLibraryServer =
-  getVideoLibrary :<|>
-  getVideoLibraries :<|>
-  createVideoLibraryHandler :<|>
-  updateVideoLibraryHandler :<|>
+libraryServer :: ServerT LibraryAPI ConfigM
+libraryServer =
+  getLibrary :<|>
+  getLibraries :<|>
+  createLibraryHandler :<|>
+  updateLibraryHandler :<|>
   getNewFilesInLibrary :<|>
   getAllFilesInLibrary
 
-getVideoLibraries :: ConfigM [VideoLibrary VideoLibraryId]
-getVideoLibraries = do
+getLibraries :: ConfigM [Library LibraryId]
+getLibraries = do
   connection <- asks psqlConnection
-  liftIO $ getAllVideoLibraries connection
+  liftIO $ getAllLibraries connection
 
-getVideoLibrary :: VideoLibraryId -> ConfigM (VideoLibrary VideoLibraryId)
-getVideoLibrary videoLibraryId = do
+getLibrary :: LibraryId -> ConfigM (Library LibraryId)
+getLibrary libraryId = do
   connection <- asks psqlConnection
-  maybeVideoLibrary <- liftIO $ getVideoLibraryById connection videoLibraryId
-  case maybeVideoLibrary of
+  maybeLibrary <- liftIO $ getLibraryById connection libraryId
+  case maybeLibrary of
     Nothing -> throwError err404
     Just x -> return x
 
-getNewFilesInLibrary :: VideoLibraryId -> ConfigM [Text]
-getNewFilesInLibrary videoLibraryId = do
+getNewFilesInLibrary :: LibraryId -> ConfigM [Text]
+getNewFilesInLibrary libraryId = do
   connection <- asks psqlConnection
-  maybeVideoLibrary <- liftIO $ getVideoLibraryById connection videoLibraryId
-  case maybeVideoLibrary of
-    Just videoLibrary -> do
-      case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
+  maybeLibrary <- liftIO $ getLibraryById connection libraryId
+  case maybeLibrary of
+    Just library -> do
+      case getFilePathFromFileURI (libraryUrl library) of
         Just filePath -> do
-          files <- liftIO $ findAllFilesInLibrary filePath
-          videoFiles <- liftIO $ getVideoFiles connection Nothing Nothing
-          return (files \\ (map (unVideoFileStorageId . videoFileStorageId) videoFiles))
+          actualFiles <- liftIO $ findAllFilesInLibrary filePath
+          files <- liftIO $ getFiles connection Nothing Nothing
+          return (actualFiles \\ (map (unFileStorageId . fileStorageId) files))
         Nothing -> throwError err422
     Nothing -> throwError err404
 
-getAllFilesInLibrary :: VideoLibraryId -> ConfigM [Text]
-getAllFilesInLibrary videoLibraryId = do
+getAllFilesInLibrary :: LibraryId -> ConfigM [Text]
+getAllFilesInLibrary libraryId = do
   connection <- asks psqlConnection
-  maybeVideoLibrary <- liftIO $ getVideoLibraryById connection videoLibraryId
-  case maybeVideoLibrary of
-    Just videoLibrary -> do
-      case getFilePathFromFileURI (videoLibraryUrl videoLibrary) of
+  maybeLibrary <- liftIO $ getLibraryById connection libraryId
+  case maybeLibrary of
+    Just library -> do
+      case getFilePathFromFileURI (libraryUrl library) of
         Just filePath -> do
           liftIO $ findAllFilesInLibrary filePath
         Nothing -> throwError err422
     Nothing -> throwError err404
 
-createVideoLibraryHandler :: VideoLibrary NoId -> ConfigM (VideoLibrary VideoLibraryId)
-createVideoLibraryHandler newVideoLibrary = do
+createLibraryHandler :: Library NoId -> ConfigM (Library LibraryId)
+createLibraryHandler newLibrary = do
   connection <- asks psqlConnection
-  liftIO $ insertVideoLibrary connection newVideoLibrary
+  liftIO $ insertLibrary connection newLibrary
 
-updateVideoLibraryHandler ::
-  VideoLibraryId -> VideoLibrary NoId -> ConfigM (VideoLibrary VideoLibraryId)
-updateVideoLibraryHandler videoLibraryId videoLibraryUpdate = do
+updateLibraryHandler ::
+  LibraryId -> Library NoId -> ConfigM (Library LibraryId)
+updateLibraryHandler libraryId libraryUpdate = do
   connection <- asks psqlConnection
-  maybeUpdatedVideoLibrary <- liftIO $
-    updateVideoLibrary connection videoLibraryId videoLibraryUpdate
-  case maybeUpdatedVideoLibrary of
+  maybeUpdatedLibrary <- liftIO $
+    updateLibrary connection libraryId libraryUpdate
+  case maybeUpdatedLibrary of
     Nothing -> throwError err404
     Just x -> return x
 

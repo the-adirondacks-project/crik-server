@@ -18,7 +18,7 @@ import Crik.Types.File
 import Crik.Types.Library
 import Routes.File (fileServer)
 import Routes.Video (videoServer)
-import Routes.VideoLibrary (videoLibraryServer)
+import Routes.VideoLibrary
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
@@ -44,7 +44,7 @@ api = Proxy
 
 server :: Config -> Server CrikAPI
 server config = hoistServer api (makeHandler config)
-  (videoServer :<|> fileServer :<|> videoLibraryServer)
+  (videoServer :<|> fileServer :<|> libraryServer)
 
 makeHandler config x = runReaderT (runConfigM x) config
 
