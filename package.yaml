@@ -69,6 +69,7 @@ executables:
     - lens
     - mtl
     - postgresql-simple
+    - postgresql-simple-migration
     - servant
     - servant-server
     - servant-swagger
