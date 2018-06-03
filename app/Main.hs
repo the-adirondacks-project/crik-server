@@ -6,7 +6,7 @@ import Database.PostgreSQL.Simple (connectPostgreSQL)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Servant (Handler, Server, (:<|>)(..), hoistServer, serve)
+import Servant (Handler, Server, Raw, (:<|>)(..), hoistServer, serve, serveDirectory)
 import Servant.API (FromHttpApiData(..))
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
@@ -39,17 +39,21 @@ getConfig = do
   psqlConnection <- connectPostgreSQL ""
   return $ Config psqlConnection
 
+type WithStatic = CrikAPI :<|> Raw
+wholeAPI :: Proxy WithStatic
+wholeAPI = Proxy
+
 api :: Proxy CrikAPI
 api = Proxy
 
-server :: Config -> Server CrikAPI
+server :: Config -> Server WithStatic
 server config = hoistServer api (makeHandler config)
-  (videoServer :<|> fileServer :<|> libraryServer)
+  (videoServer :<|> fileServer :<|> libraryServer) :<|> serveDirectory "/home/jleach/videos"
 
 makeHandler config x = runReaderT (runConfigM x) config
 
 app :: Config -> Application
-app config = serve api (server config)
+app config = serve wholeAPI (server config)
 
 main :: IO ()
 main = do
