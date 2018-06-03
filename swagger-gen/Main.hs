@@ -86,7 +86,7 @@ instance ToSchema (Library LibraryId) where
 instance ToSchema (Library NoId) where
   declareNamedSchema _ = do
     videoLibraryUrlSchema <- declareSchemaRef (Proxy :: Proxy Text)
-    return $ NamedSchema (Just "NewVideoLibrary") $ mempty
+    return $ NamedSchema (Just "NewLibrary") $ mempty
       & type_ .~ SwaggerObject
       & properties .~ [("videoLibraryUrl", videoLibraryUrlSchema)]
       & required .~ ["videoLibraryUrl"]
@@ -102,17 +102,17 @@ addResponseCode statusCode statusDescription subAPI fullAPI swagger =
   setResponseFor (subOperations subAPI fullAPI) statusCode (return responseSchema) swagger
   where responseSchema = (mempty :: Response) & description .~ statusDescription
 
-addAllVideoLibraryFilesResponses :: Swagger -> Swagger
-addAllVideoLibraryFilesResponses =
-  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy GetAllFilesInVideoLibrary)
+addAllLibraryFilesResponses :: Swagger -> Swagger
+addAllLibraryFilesResponses =
+  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy GetAllFilesInLibrary)
     (Proxy :: Proxy CrikAPI)
 
-addNewVideoLibraryFilesResponses :: Swagger -> Swagger
-addNewVideoLibraryFilesResponses =
-  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy GetNewFilesInVideoLibrary)
+addNewLibraryFilesResponses :: Swagger -> Swagger
+addNewLibraryFilesResponses =
+  addResponseCode 422 "Invalid video library path" (Proxy :: Proxy GetNewFilesInLibrary)
     (Proxy :: Proxy CrikAPI)
 
 main :: IO ()
 main = do
-  let swagger = (addNewVideoLibraryFilesResponses . addAllVideoLibraryFilesResponses) apiSwagger
+  let swagger = (addNewLibraryFilesResponses . addAllLibraryFilesResponses) apiSwagger
   BL8.writeFile "swagger.json" $ encodePretty swagger
