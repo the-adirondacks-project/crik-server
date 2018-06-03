@@ -17,17 +17,17 @@ import Database.Instance
 
 getAllLibraries :: Connection -> IO ([Library LibraryId])
 getAllLibraries connection = do
-  rows <- query_ connection "select * from video_libraries"
+  rows <- query_ connection "select * from libraries"
   return (rows)
 
 getLibraryById :: Connection -> LibraryId -> IO (Maybe (Library LibraryId))
 getLibraryById connection libraryId = do
-  rows <- query connection "select * from video_libraries where id = ?" (Only libraryId)
+  rows <- query connection "select * from libraries where id = ?" (Only libraryId)
   return (listToMaybe rows)
 
 insertLibrary :: Connection -> Library NoId -> IO (Library LibraryId)
 insertLibrary connection libraryPost = do
-  rows <- query connection "insert into video_libraries (url) values (?) returning id, url" libraryPost
+  rows <- query connection "insert into libraries (url) values (?) returning id, url" libraryPost
   case rows of
     [] -> throw $ InsertReturnedNothing
       "insertLibrary returned nothing when it should have returned the inserted Library"
@@ -37,7 +37,7 @@ insertLibrary connection libraryPost = do
 
 updateLibrary :: Connection -> LibraryId -> Library NoId -> IO (Maybe (Library LibraryId))
 updateLibrary connection libraryId libraryPost = do
-  rows <- query connection "update video_libraries set url = ? where id = ? returning id, url"
+  rows <- query connection "update libraries set url = ? where id = ? returning id, url"
     (libraryUrl libraryPost, libraryId)
   case rows of
     [] -> return Nothing

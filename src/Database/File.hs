@@ -23,17 +23,17 @@ import Database.Instance
 
 getFiles :: Connection -> Maybe VideoId -> Maybe FileId -> IO ([File FileId])
 getFiles connection Nothing Nothing = do
-  rows <- query_ connection (Query $ concat ["select ", allColumns, " from video_files"])
+  rows <- query_ connection (Query $ concat ["select ", allColumns, " from files"])
   return (rows)
 getFiles connection (Just videoId) Nothing = do
-  rows <- query connection (Query $ concat ["select ", allColumns, " from video_files where video_id = ?"])
+  rows <- query connection (Query $ concat ["select ", allColumns, " from files where video_id = ?"])
     (Only videoId)
   return (rows)
 getFiles connection Nothing (Just fileId) = do
-  rows <- query connection (Query $ concat ["select ", allColumns, " from video_files where id = ?"]) (Only fileId)
+  rows <- query connection (Query $ concat ["select ", allColumns, " from files where id = ?"]) (Only fileId)
   return (rows)
 getFiles connection (Just videoId) (Just fileId) = do
-  rows <- query connection (Query $ concat ["select ", allColumns, " from video_files where video_id = ? and id = ?"])
+  rows <- query connection (Query $ concat ["select ", allColumns, " from files where video_id = ? and id = ?"])
     (videoId, fileId)
   return (rows)
 
@@ -45,7 +45,7 @@ getFile connection maybeVideoId fileId = do
 insertFile :: Connection -> File NoId -> IO (File FileId)
 insertFile connection filePost = do
   rows <- query connection
-    (Query $ concat ["insert into video_files (", insertColumns, ") values (?, ?, ?, ?) returning ", allColumns])
+    (Query $ concat ["insert into files (", insertColumns, ") values (?, ?, ?, ?) returning ", allColumns])
     filePost
   case rows of
     [] -> throw $ InsertReturnedNothing
@@ -57,4 +57,4 @@ allColumns :: ByteString
 allColumns = concat ["id, ", insertColumns]
 
 insertColumns :: ByteString
-insertColumns = "video_id, url, video_library_id, storage_id"
+insertColumns = "video_id, url, library_id, storage_id"
