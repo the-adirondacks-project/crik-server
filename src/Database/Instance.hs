@@ -76,7 +76,7 @@ instance FromField LibraryId where
     return $ LibraryId videoLibraryId
 
 instance ToField LibraryId where
-  toField LibraryId{..} = toField unVideoLibraryId
+  toField LibraryId{..} = toField unLibraryId
 
 instance (FromField t) => FromRow (Library t) where
   fromRow = Library <$> field <*> field
