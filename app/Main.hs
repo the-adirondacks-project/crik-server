@@ -6,7 +6,7 @@ import Database.PostgreSQL.Simple (connectPostgreSQL)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Servant (Handler, Server, (:<|>)(..), hoistServer, serve)
+import Servant (Handler, Server, Raw, (:<|>)(..), hoistServer, serve, serveDirectory)
 import Servant.API (FromHttpApiData(..))
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
@@ -19,6 +19,7 @@ import Crik.Types.Library
 import Routes.File (fileServer)
 import Routes.Video (videoServer)
 import Routes.Library
+import Routes.Static
 
 maybeGetPort :: IO (Maybe Int)
 maybeGetPort = do
@@ -37,19 +38,19 @@ getPort = do
 getConfig :: IO Config
 getConfig = do
   psqlConnection <- connectPostgreSQL ""
-  return $ Config psqlConnection
+  return $ Config psqlConnection "/home/jleach/videos"
 
-api :: Proxy CrikAPI
-api = Proxy
+crikAPI :: Proxy CrikAPI
+crikAPI = Proxy
 
-server :: Config -> Server CrikAPI
-server config = hoistServer api (makeHandler config)
-  (videoServer :<|> fileServer :<|> libraryServer)
+server :: Config -> Server CrikAPIWithStaticRoute
+server config = hoistServer crikAPI (makeHandler config)
+  (videoServer :<|> fileServer :<|> libraryServer) :<|> (staticServer config)
 
 makeHandler config x = runReaderT (runConfigM x) config
 
 app :: Config -> Application
-app config = serve api (server config)
+app config = serve crikAPIWithStaticRoute (server config)
 
 main :: IO ()
 main = do
