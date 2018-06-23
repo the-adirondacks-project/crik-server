@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Database.Library
 (
   getAllLibraries
@@ -26,8 +28,10 @@ getLibraryById connection libraryId = do
   return (listToMaybe rows)
 
 insertLibrary :: Connection -> Library NoId -> IO (Library LibraryId)
-insertLibrary connection libraryPost = do
-  rows <- query connection "insert into libraries (url) values (?) returning id, url" libraryPost
+insertLibrary connection Library{..} = do
+  rows <- query connection
+    "insert into libraries (url, name) values (?, ?) returning id, url, name"
+      (libraryUrl, libraryName)
   case rows of
     [] -> throw $ InsertReturnedNothing
       "insertLibrary returned nothing when it should have returned the inserted Library"
@@ -36,9 +40,9 @@ insertLibrary connection libraryPost = do
       "insertLibrary returned multiple rows when it should have returned just one"
 
 updateLibrary :: Connection -> LibraryId -> Library NoId -> IO (Maybe (Library LibraryId))
-updateLibrary connection libraryId libraryPost = do
-  rows <- query connection "update libraries set url = ? where id = ? returning id, url"
-    (libraryUrl libraryPost, libraryId)
+updateLibrary connection libraryId (Library _ url name) = do
+  rows <- query connection "update libraries set url = ?, name = ? where id = ? returning id, url"
+    (url, name, libraryId)
   case rows of
     [] -> return Nothing
     [x] -> return $ Just x

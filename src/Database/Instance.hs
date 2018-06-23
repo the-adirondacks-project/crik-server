@@ -79,10 +79,10 @@ instance ToField LibraryId where
   toField LibraryId{..} = toField unLibraryId
 
 instance (FromField t) => FromRow (Library t) where
-  fromRow = Library <$> field <*> field
+  fromRow = Library <$> field <*> field <*> field
 
 instance ToRow (Library NoId) where
-  toRow Library{..} = [toField libraryUrl]
+  toRow Library{..} = [toField libraryUrl, toField libraryName]
 
 instance ToRow (Library LibraryId) where
-  toRow Library{..} = [toField libraryId, toField libraryUrl]
+  toRow Library{..} = [toField libraryId, toField libraryUrl, toField libraryName]
