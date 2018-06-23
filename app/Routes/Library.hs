@@ -15,7 +15,8 @@ import System.Directory (listDirectory)
 
 import Crik.API
 import Config (Config(..), ConfigM(..))
-import Database.Library
+import Database.Library hiding (getLibraryByName)
+import qualified Database.Library as DB
 import Database.File
 import Crik.Types (NoId(NoId))
 import Crik.Types.Library
@@ -24,6 +25,7 @@ import Crik.Types.File
 libraryServer :: ServerT LibraryAPI ConfigM
 libraryServer =
   getLibrary :<|>
+  getLibraryByName :<|>
   getLibraries :<|>
   createLibraryHandler :<|>
   updateLibraryHandler :<|>
@@ -39,6 +41,14 @@ getLibrary :: LibraryId -> ConfigM (Library LibraryId)
 getLibrary libraryId = do
   connection <- asks psqlConnection
   maybeLibrary <- liftIO $ getLibraryById connection libraryId
+  case maybeLibrary of
+    Nothing -> throwError err404
+    Just x -> return x
+
+getLibraryByName :: Text -> ConfigM (Library LibraryId)
+getLibraryByName libraryName = do
+  connection <- asks psqlConnection
+  maybeLibrary <- liftIO $ DB.getLibraryByName connection libraryName
   case maybeLibrary of
     Nothing -> throwError err404
     Just x -> return x

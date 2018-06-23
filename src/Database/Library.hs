@@ -4,6 +4,7 @@ module Database.Library
 (
   getAllLibraries
 , getLibraryById
+, getLibraryByName
 , insertLibrary
 , updateLibrary
 ) where
@@ -11,6 +12,7 @@ module Database.Library
 import Control.Exception (throw)
 import Data.Maybe (listToMaybe)
 import Database.PostgreSQL.Simple (Connection, Only(Only), query, query_)
+import Data.Text (Text)
 
 import Database.Error (DatabaseException(..))
 import Crik.Types (NoId)
@@ -25,6 +27,12 @@ getAllLibraries connection = do
 getLibraryById :: Connection -> LibraryId -> IO (Maybe (Library LibraryId))
 getLibraryById connection libraryId = do
   rows <- query connection "select * from libraries where id = ?" (Only libraryId)
+  return (listToMaybe rows)
+
+getLibraryByName :: Connection -> Text -> IO (Maybe (Library LibraryId))
+getLibraryByName connection name = do
+  print name
+  rows <- query connection "select * from libraries where name = ?" (Only name)
   return (listToMaybe rows)
 
 insertLibrary :: Connection -> Library NoId -> IO (Library LibraryId)
