@@ -11,12 +11,14 @@ module Routes.Video
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
+import Data.Text (Text)
 import Servant (ServerT, err404, throwError)
 import Servant.API (Capture, Get, JSON, Post, Put, ReqBody, (:>), (:<|>)((:<|>)))
 
 import Crik.API (VideoAPI)
 import Config (Config(..), ConfigM(..))
-import Database.Video (getAllVideos, getVideoById, insertVideo, updateVideo)
+import Database.Video hiding (getVideoByName)
+import qualified Database.Video as DB
 import Database.File
 import Crik.Types
 import Crik.Types.Video (Video(..), VideoId(VideoId))
@@ -25,6 +27,7 @@ import Crik.Types.File
 videoServer :: ServerT VideoAPI ConfigM
 videoServer =
   getVideo :<|>
+  getVideoByName :<|>
   getVideos :<|>
   newVideoHandler :<|>
   updateVideoHandler :<|>
@@ -34,6 +37,14 @@ getVideo :: VideoId -> ConfigM (Video VideoId)
 getVideo videoId = do
   connection <- asks psqlConnection
   maybeVideo <- liftIO $ getVideoById connection videoId
+  case maybeVideo of
+    Nothing -> throwError err404
+    Just x -> return x
+
+getVideoByName :: Text -> ConfigM (Video VideoId)
+getVideoByName name = do
+  connection <- asks psqlConnection
+  maybeVideo <- liftIO $ DB.getVideoByName connection name
   case maybeVideo of
     Nothing -> throwError err404
     Just x -> return x

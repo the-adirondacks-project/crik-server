@@ -5,6 +5,7 @@ module Database.Video
 (
   getAllVideos
 , getVideoById
+, getVideoByName
 , insertVideo
 , updateVideo
 ) where
@@ -27,6 +28,11 @@ getAllVideos connection = do
 getVideoById :: Connection -> VideoId -> IO (Maybe (Video VideoId))
 getVideoById connection videoId = do
   rows <- query connection "select * from videos where id = ?" (Only videoId)
+  return (listToMaybe rows)
+
+getVideoByName :: Connection -> Text -> IO (Maybe (Video VideoId))
+getVideoByName connection name = do
+  rows <- query connection "select * from videos where name = ?" (Only name)
   return (listToMaybe rows)
 
 insertVideo :: Connection -> Video NoId -> IO (Video VideoId)
